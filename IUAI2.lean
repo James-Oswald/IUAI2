@@ -82,21 +82,22 @@ def cbu (n : Nat) : List Nat :=
     Bu (n + 1) |>.tail
 
 lemma cbu_01 (n : Nat) : ∀e ∈ cbu n, e ≤ 1 := by
-    intro e he
-    simp only [cbu] at he
-    have H := @List.mem_map (Nat) (Nat) (Nat → Nat) _ _ _ _ he
+    intro e H
+    simp only [cbu] at H
+    apply Bu_01 (n + 1)
+    exact List.mem_of_mem_tail H
 
 
 -- The canonical bijection between binary strings and natural numbers
 def cb (n : Nat) : BinString :=
-    ⟨B (n + 1) |>.u.tail,
+    ⟨cbu n, cbu_01 n⟩
 
 
-abbrev v : Nat := 0
+abbrev v : Nat := 6
 #eval l v
 #eval Bi v 1
 #eval B v
-#eval ce v
+#eval cb v
 
 
 
