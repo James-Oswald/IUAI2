@@ -53,13 +53,9 @@ lemma Bi_01 (n i : Nat) : Bi n i ≤ 1 := by
 
 -- The first digit of every binary number representation is 1
 lemma Bi_one_one (n : Nat) (H : n > 0) : Bi n 1 = 1 := by
-    have H2 := Bi_01 n 1
     simp_all [Bi, l]
     have H3 := @Nat.log2_self_le n (by omega)
-    induction n
-    . contradiction
-    . case succ a ih =>
-      sorry
+    sorry
 
 def Bu (n : Nat) : List Nat :=
     List.range (l n + 1) |>.tail |>.map (Bi n ·)
@@ -78,20 +74,20 @@ lemma Bu_01 (n : Nat) : ∀e ∈ Bu n, e ≤ 1 := by
 def B (n : Nat) : BinString :=
     ⟨Bu n, Bu_01 n⟩
 
+-- Function that produces the binary representation of n
 def cbu (n : Nat) : List Nat :=
     Bu (n + 1) |>.tail
 
+-- The binary representation of n contains only 0s and 1s
 lemma cbu_01 (n : Nat) : ∀e ∈ cbu n, e ≤ 1 := by
     intro e H
     simp only [cbu] at H
     apply Bu_01 (n + 1)
     exact List.mem_of_mem_tail H
 
-
 -- The canonical bijection between binary strings and natural numbers
 def cb (n : Nat) : BinString :=
     ⟨cbu n, cbu_01 n⟩
-
 
 abbrev v : Nat := 6
 #eval l v
@@ -101,7 +97,7 @@ abbrev v : Nat := 6
 
 
 
-theorem canonicalBijection : Function.Bijective ce := by
+theorem canonicalBijection : Function.Bijective cb := by
     constructor
     . case left =>
       simp [Function.Injective]
