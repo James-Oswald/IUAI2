@@ -4,6 +4,7 @@
         "Binstringlike",
         "Injective",
         "Mathlib",
-        "Repr"
+        "Repr",
+        "succ"
     ]
 }

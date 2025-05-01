@@ -4,7 +4,7 @@ import Mathlib
 -- The type of finite binary strings
 structure BinString where
     u: List Nat
-    --u_cond: ∀e ∈ u, e ≤ 1
+    u_cond: ∀e ∈ u, e ≤ 1
 deriving Repr
 
 def len (b : BinString) : Nat := b.u.length
@@ -44,46 +44,59 @@ def l (n : Nat) : Nat :=
 def Bi (n i : Nat) : Nat :=
     (n ⌊/⌋ 2^((l n) - i)) % 2
 
+-- Bi only returns 0 or 1
+lemma Bi_01 (n i : Nat) : Bi n i ≤ 1 := by
+    simp only [Bi]
+    have H := @Nat.mod_lt (n ⌊/⌋ 2 ^ (l n - i) % 2) 2
+        (by simp only [gt_iff_lt, Nat.ofNat_pos])
+    omega
+
+-- The first digit of every binary number representation is 1
+lemma Bi_one_one (n : Nat) (H : n > 0) : Bi n 1 = 1 := by
+    have H2 := Bi_01 n 1
+    simp_all [Bi, l]
+    have H3 := @Nat.log2_self_le n (by omega)
+    induction n
+    . contradiction
+    . case succ a ih =>
+      sorry
+
+def Bu (n : Nat) : List Nat :=
+    List.range (l n + 1) |>.tail |>.map (Bi n ·)
+
+-- The binary representation of n contains only 0s and 1s
+lemma Bu_01 (n : Nat) : ∀e ∈ Bu n, e ≤ 1 := by
+    intro e he
+    simp_all only [
+      Bu, Bi, l,
+      Nat.floorDiv_eq_div, List.tail_range,
+      add_tsub_cancel_right, List.mem_map,
+      List.mem_range'_1]
+    omega
+
+-- The binary representation of n
 def B (n : Nat) : BinString :=
-    List.range (l n + 1) |>.tail |>.map (Bi n ·) |> BinString.mk
+    ⟨Bu n, Bu_01 n⟩
 
-def ce (n : Nat) : BinString :=
-    B (n + 1) |>.u.tail |> BinString.mk
+def cbu (n : Nat) : List Nat :=
+    Bu (n + 1) |>.tail
 
-abbrev v : Nat := 4
+lemma cbu_01 (n : Nat) : ∀e ∈ cbu n, e ≤ 1 := by
+    intro e he
+    simp only [cbu] at he
+    have H := @List.mem_map (Nat) (Nat) (Nat → Nat) _ _ _ _ he
+
+
+-- The canonical bijection between binary strings and natural numbers
+def cb (n : Nat) : BinString :=
+    ⟨B (n + 1) |>.u.tail,
+
+
+abbrev v : Nat := 0
 #eval l v
 #eval Bi v 1
 #eval B v
 #eval ce v
-
-
--- The first digit of every binary number representation is 1
-lemma Bi_one_one (n : Nat) (H : n > 0) : Bi n 1 = 1 := by
-    simp only [Bi, l, add_tsub_cancel_right, Nat.floorDiv_eq_div]
-
-
-
-
-
-
-
-
-
-
-
-
--- lemma B_zero_one (n i: Nat) : B n i = 0 ∨ B n i = 1 := by
---     induction n
---     induction i
---     simp [B]
-
-
-
-
-
-
-#check B' 1
-
 
 
 
