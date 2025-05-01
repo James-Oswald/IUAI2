@@ -34,18 +34,64 @@ example : (⋃ (n : Nat), 𝔹^n) = 𝔹* := by
     simp_all only [Set.mem_iUnion, Set.mem_univ, iff_true]
     exists x.u.length
 
+-- The length of the binary representation of n
+@[simp]
 def l (n : Nat) : Nat :=
-    (Nat.log2 (n + 1)) + 1
+    (Nat.log2 n) + 1
 
-def B (n : Nat) (i : Nat) :=
-     n ⌊/⌋ 2^((l n) - i) % 2
+-- The ith binary digit of n
+@[simp]
+def Bi (n i : Nat) : Nat :=
+    (n ⌊/⌋ 2^((l n) - i)) % 2
 
-def B' (n : Nat) : BinString :=
-    { u := List.range ((l n)) |>.tail |>.map (fun i => B n i) }
+def B (n : Nat) : BinString :=
+    List.range (l n + 1) |>.tail |>.map (Bi n ·) |> BinString.mk
 
 def ce (n : Nat) : BinString :=
-    B' (n + 1) |>.u.tail |> BinString.mk
+    B (n + 1) |>.u.tail |> BinString.mk
+
+abbrev v : Nat := 4
+#eval l v
+#eval Bi v 1
+#eval B v
+#eval ce v
+
+
+-- The first digit of every binary number representation is 1
+lemma Bi_one_one (n : Nat) (H : n > 0) : Bi n 1 = 1 := by
+    simp only [Bi, l, add_tsub_cancel_right, Nat.floorDiv_eq_div]
+
+
+
+
+
+
+
+
+
+
+
+
+-- lemma B_zero_one (n i: Nat) : B n i = 0 ∨ B n i = 1 := by
+--     induction n
+--     induction i
+--     simp [B]
+
+
+
+
+
+
+#check B' 1
+
+
+
 
 theorem canonicalBijection : Function.Bijective ce := by
     constructor
-    sorry
+    . case left =>
+      simp [Function.Injective]
+      intro a b
+      sorry
+    . case right =>
+      sorry
