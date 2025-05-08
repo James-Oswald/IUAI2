@@ -2,21 +2,48 @@
 import Mathlib
 
 -- The type of finite binary strings
-structure BinString where
-    u: List Nat
-    u_cond: ∀e ∈ u, e ≤ 1
-deriving Repr
+-- structure BinString where
+--     u: List Nat
+--     u_cond: ∀e ∈ u, e ≤ 1
+-- deriving Repr
 
-def len (b : BinString) : Nat := b.u.length
+-- A type can be interpreted as a binary string if
+-- It has a surjection to a list of booleans
+class BinStr (α : Type) where
+  asListBool : α → List Bool
+  asListBoolSur : Function.Surjective asListBool
 
-def BinStringSet : Set BinString := Set.univ
+instance: BinStr (List Bool) where
+  asListBool := id
+  asListBoolSur := Function.surjective_id
 
-notation "𝔹*" => BinStringSet
+instance: BinStr (List (Fin 2)) where
+  asListBool := List.map (λ x => x == 1)
+  asListBoolSur := by
+    unfold Function.Surjective
+    intro b
+    exists b.map (λ x => if x then 1 else 0)
+    simp_all only [Fin.isValue, List.map_map]
+    ext i a : 2
+    simp_all [↓reduceIte]
+    apply Iff.intro
+    · intro a_1
+      cases a_1 with
+      | inl h => simp_all only
+      | inr h_1 => simp_all only
+    · intro a_1
+      simp_all only [Option.some.injEq, and_self, Bool.eq_false_or_eq_true_self]
 
-def BinStringSetN (n : Nat) : Set BinString :=
-    { b : BinString | b.u.length = n }
+def BinStr.len {α} [BinStr α] (b : α) : Nat := BinStr.asListBool b |>.length
 
-prefix:max "𝔹^" => BinStringSetN
+def BinStrSet {α} [BinStr α]: Set α := Set.univ
+
+notation "𝔹*" => BinStrSet
+
+def BinStrSetN {α} [BinStr α] (n : Nat) : Set α :=
+    { b : α | BinStr.len b = n}
+
+prefix:max "𝔹^" => BinStrSetN
 
 #check 𝔹^3
 

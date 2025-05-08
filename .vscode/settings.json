@@ -2,9 +2,12 @@
     "cSpell.words": [
         "Bijective",
         "Binstringlike",
+        "forall",
         "Injective",
         "Mathlib",
+        "Prec",
         "Repr",
-        "succ"
+        "succ",
+        "Surjective"
     ]
 }
