@@ -1,65 +1,46 @@
 
 import Mathlib
 
--- The type of finite binary strings
--- structure BinString where
---     u: List Nat
---     u_cond: ∀e ∈ u, e ≤ 1
--- deriving Repr
+--The type of possibly infinite binary strings
 
--- A type can be interpreted as a binary string if
--- It has a surjection to a list of booleans
-class BinStr (α : Type) where
-  asListBool : α → List Bool
-  asListBoolSur : Function.Surjective asListBool
+def BinStr : Type := Stream'.Seq Bool
 
-instance: BinStr (List Bool) where
-  asListBool := id
-  asListBoolSur := Function.surjective_id
+@[simp]
+def BinStr.isFinite (b : BinStr) : Prop := b.Terminates
 
-instance: BinStr (List (Fin 2)) where
-  asListBool := List.map (λ x => x == 1)
-  asListBoolSur := by
-    unfold Function.Surjective
-    intro b
-    exists b.map (λ x => if x then 1 else 0)
-    simp_all only [Fin.isValue, List.map_map]
-    ext i a : 2
-    simp_all [↓reduceIte]
-    apply Iff.intro
-    · intro a_1
-      cases a_1 with
-      | inl h => simp_all only
-      | inr h_1 => simp_all only
-    · intro a_1
-      simp_all only [Option.some.injEq, and_self, Bool.eq_false_or_eq_true_self]
+def BinStr.len (b : BinStr) (H : b.isFinite) : Nat := b.length H
 
-def BinStr.len {α} [BinStr α] (b : α) : Nat := BinStr.asListBool b |>.length
+def FinBinStrSet : Set BinStr := {b : BinStr | b.isFinite}
 
-def BinStrSet {α} [BinStr α]: Set α := Set.univ
+notation "𝔹*" => FinBinStrSet
 
-notation "𝔹*" => BinStrSet
+def FinBinStrSetN (n : Nat) : Set BinStr :=
+  {b : BinStr | b.isFinite ∧ ((H : b.isFinite) -> b.len H = n)}
 
-def BinStrSetN {α} [BinStr α] (n : Nat) : Set α :=
-    { b : α | BinStr.len b = n}
-
-prefix:max "𝔹^" => BinStrSetN
+prefix:max "𝔹^" => FinBinStrSetN
 
 #check 𝔹^3
 
+-- Some simple properties on finite binary strings
+
 example : 𝔹^3 ⊆ 𝔹* := by
-    simp only [BinStringSet, Set.subset_univ]
+    simp only [FinBinStrSetN, BinStr.isFinite, FinBinStrSet, Set.setOf_subset_setOf, and_imp]
+    intro a H _
+    exact H
 
 example : ∀n, 𝔹^n ⊆ 𝔹* := by
     intro n
-    simp [BinStringSet]
+    simp only [FinBinStrSetN, BinStr.isFinite, FinBinStrSet, Set.setOf_subset_setOf, and_imp]
+    intro a H _
+    exact H
 
 example : (⋃ (n : Nat), 𝔹^n) = 𝔹* := by
-    simp only [BinStringSet]
+    simp [FinBinStrSet, FinBinStrSetN]
     apply Set.ext
     intro x
-    simp_all only [Set.mem_iUnion, Set.mem_univ, iff_true]
-    exists x.u.length
+    simp_all only [Set.mem_iUnion, Set.mem_setOf_eq, exists_and_left, and_iff_left_iff_imp,
+      forall_true_left, exists_eq', implies_true]
+
 
 -- The length of the binary representation of n
 @[simp]
@@ -98,8 +79,8 @@ lemma Bu_01 (n : Nat) : ∀e ∈ Bu n, e ≤ 1 := by
     omega
 
 -- The binary representation of n
-def B (n : Nat) : BinString :=
-    ⟨Bu n, Bu_01 n⟩
+def B (n : Nat) : BinStr :=
+
 
 -- Function that produces the binary representation of n
 def cbu (n : Nat) : List Nat :=
