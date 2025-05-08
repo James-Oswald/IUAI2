@@ -18,6 +18,4 @@ def toString : FinBinStr -> String
 instance : Repr FinBinStr where
   reprPrec b _ := FinBinStr.toString b
 
-
-
 end FinBinStr
