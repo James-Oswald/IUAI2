@@ -4,10 +4,12 @@
         "Binstringlike",
         "forall",
         "Injective",
+        "IUAI",
         "Mathlib",
         "Prec",
         "Repr",
         "succ",
-        "Surjective"
+        "Surjective",
+        "uncomputable"
     ]
 }
