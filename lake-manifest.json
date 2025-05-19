@@ -101,5 +101,5 @@
    "inputRev": "main",
    "inherited": true,
    "configFile": "lakefile.toml"}],
- "name": "canonical_examples",
+ "name": "IUAI2",
  "lakeDir": ".lake"}
