@@ -3,16 +3,20 @@
         "Bijective",
         "Binstringlike",
         "compl",
+        "Emptyₐ",
+        "Fintype",
         "forall",
         "Injective",
         "IUAI",
         "leanprover",
         "Mathlib",
+        "nsmul",
         "Prec",
         "preimage",
         "Repr",
         "succ",
         "Surjective",
+        "tsum",
         "uncomputable"
     ]
 }
