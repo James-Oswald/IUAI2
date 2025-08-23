@@ -7,11 +7,18 @@
 
 import Mathlib
 
-variable {Ω_t : Type}
-variable (F : Set (Set Ω_t))
+-- The type of events
+variable {Ωt : Type}
 
-instance [Fintype Ω_t] : Fintype (Set Ω_t) := inferInstance
-instance [Fintype Ω_t] : Fintype (Set (Set Ω_t)) := inferInstance
+-- The carrying type of a σ-algebra
+variable (F : Set (Set Ωt))
+
+
+abbrev pd (A B : Set Ωt) : Prop := A ∩ B = ∅
+-- Pairwise disjoint sequence of outcomes
+abbrev cpd (A : Nat -> Set Ωt) : Prop := ∀ i j, i ≠ j -> pd (A i) (A j)
+
+abbrev inF (A : Nat -> Set Ωt) : Prop := ∀ i, A i ∈ F
 
 -- Definition 2.2.1 (σ-algebra)
 -- Given a set Ω (whose elements are called outcomes), a
@@ -20,15 +27,9 @@ instance [Fintype Ω_t] : Fintype (Set (Set Ω_t)) := inferInstance
 -- (ii) Closed under countable union: If A1,A2,... ∈ F, then U^∞_n=1 A_n ∈ F.
 -- (iii) Closed under complement: If A ∈ F, then Ω\A =: Aᶜ ∈ F.
 class SigmaAlgebra : Prop where
-  F_empty : (∅ : Set Ω_t) ∈ F
-  closed_countable_union : ∀ (A : Nat -> F), (⋃ i, A i) ∈ F
+  F_empty : ∅ ∈ F
+  closed_countable_union (A : Nat -> Set Ωt) : inF F A -> (⋃ i, A i) ∈ F
   closed_comp : ∀ A ∈ F, Aᶜ ∈ F
-
--- instance [Fintype Ω_t] : Decidable (∅ ∈ F) := by
---   apply Set.decidableMemOfFintype F
--- instance {Ω_t : Type} [Fintype Ω_t] {F : Set (Set Ω_t)} [SigmaAlgebra F] :
--- Decidable (SigmaAlgebra F) := by
-
 
 lemma SigmaAlgebra.F_univ [SigmaAlgebra F] : Set.univ ∈ F := by
   rw [<-Set.compl_empty]
@@ -37,55 +38,82 @@ lemma SigmaAlgebra.F_univ [SigmaAlgebra F] : Set.univ ∈ F := by
 
 --Note that a σ-algebra F is also closed under countable intersection, due to De Morgan’s
 -- law ⋂^∞_n=1 A_n = (U^∞_n=1 A^c_n)^c.
-lemma SigmaAlgebra.closed_countable_inter [SigmaAlgebra F] :
-∀ (A : Nat -> F), (⋂ i, A i) ∈ F := by
+lemma SigmaAlgebra.closed_countable_inter [SigmaAlgebra F] (A : Nat -> Set Ωt) :
+(∀i, A i ∈ F) -> (⋂ i, A i) ∈ F:= by
   intros A
   rw [Set.iInter_eq_compl_iUnion_compl]
   apply SigmaAlgebra.closed_comp
-  let A' (i : Nat) : F := ⟨(A i)ᶜ, by
-    apply SigmaAlgebra.closed_comp
-    simp only [Subtype.coe_prop]⟩
-  apply SigmaAlgebra.closed_countable_union A'
+  apply SigmaAlgebra.closed_countable_union
+  intro i
+  apply SigmaAlgebra.closed_comp
+  exact A i
 
 -- Definition 2.2.2 (Measurable space) A measurable space is a pair (Ω,F) where F
 -- is a σ-algebra on Ω.
 structure MeasureSpace where
-  Ω_t : Type
-  F : Set (Set Ω_t)
+  Ωt : Type
+  F : Set (Set Ωt)
   σ_algebra: SigmaAlgebra F
 
 -- Omega as a set
-def MeasureSpace.Ω (M : MeasureSpace) : Set M.Ω_t := Set.univ
--- Omega as a set inside the sigma algebra
-abbrev MeasureSpace.Ωₐ (M : MeasureSpace) : M.F := ⟨M.Ω, M.σ_algebra.F_univ⟩
-abbrev MeasureSpace.Emptyₐ (M : MeasureSpace) : M.F := ⟨∅, M.σ_algebra.F_empty⟩
-abbrev MeasureSpace.UA (M : MeasureSpace) (A : Nat -> M.F) : M.F :=
-  ⟨(⋃ i, (A i)), by apply M.σ_algebra.closed_countable_union⟩
+def MeasureSpace.Ω (M : MeasureSpace) : Set M.Ωt := Set.univ
 
-class ProbabilityMeasure {M : MeasureSpace} (P : M.F -> Real) where
-  normalization: P M.Ωₐ = 1
-  countable_add (A : Nat -> M.F) : P (M.UA A) = (∑' i, P (A i))
+class ProbabilityMeasure {M : MeasureSpace} (P : Set M.Ωt -> ℝ) where
+  excess : ∀ A ∉ M.F, P A = 0 -- Domain hacking because im annoyed
+  normalization: P M.Ω = 1
+  countable_add (A : Nat -> Set M.Ωt)
+    (PD : cpd A) (H : ∀ i, A i ∈ M.F) :
+    P (⋃ i, A i) = (∑' i, P (A i))
 
-class SemiProbabilityMeasure {M : MeasureSpace} (P : M.F -> Real) where
-  normalization: P M.Ωₐ ≤ 1
-  countable_add (A : Nat -> M.F) : P (M.UA A) = (∑' i, P (A i))
+-- class SemiProbabilityMeasure {M : MeasureSpace} (P : Set M.Ωt -> Real) where
+--   normalization: P M.Ω ≤ 1
+--   countable_add (A : Nat -> M.F) : P (⋃ i, A i) = (∑' i, P (A i))
 
-class SemiMeasure {M : MeasureSpace} (P : M.F -> Real) where
-  normalization: P M.Ωₐ ≤ 1
-  countable_add (A : Nat -> M.F) : P (M.UA A) ≤ (∑' i, P (A i))
+-- class SemiMeasure {M : MeasureSpace} (P : Set M.Ωt -> Real) where
+--   normalization: P M.Ω ≤ 1
+--   countable_add (A : Nat -> M.F) : P (⋃ i, A i) ≤ (∑' i, P (A i))
 
-structure ProbSpace where
-  M : MeasureSpace
-  P : M.F -> Real
+structure ProbSpace extends MeasureSpace where
+  P : Set Ωt -> Real
   pm : ProbabilityMeasure P
 
-example {p : ProbSpace} : p.P p.M.Emptyₐ = 0 := by
-  have h := p.pm.countable_add (λ _ => p.M.Emptyₐ)
-  rw [MeasureSpace.UA, MeasureSpace.Emptyₐ] at h
-  simp_all only [Set.iUnion_empty, tsum_const, Nat.card_eq_zero_of_infinite, zero_nsmul]
+lemma ProbSpace.fin_add {p : ProbSpace}
+(A B : Set p.Ωt) (H1 : A ∈ p.F) (H2 : B ∈ p.F) (H3 : pd A B) :
+p.P (A ∪ B) = p.P A + p.P B := by
+  let f : Nat -> Set p.Ωt
+    | 0 => A | 1 => B | _ => ∅
+  have H4: cpd f := by
+    simp [cpd];
+    grind only [= Set.mem_empty_iff_false, = Set.mem_inter_iff]
+  have H5: inF p.F f := by
+    simp [inF]
+    intro i
+    simp [f]
+    split
+    exact H1
+    exact H2
+    apply p.σ_algebra.F_empty
+  have H6 := p.pm.countable_add f H4 H5
 
-example {p : ProbSpace} (A B : p.M.F) : p.P (A ∪ B) = p.P A + p.P B := by
-  have h := p.pm.countable_add (λ i => if i = 0 then A else B)
-  rw [MeasureSpace.UA, Set.iUnion_singleton, Set.iUnion_singleton] at h
-  simp_all only [if_pos rfl, tsum_singleton, Nat.card_eq_one_of_finite, one_nsmul]
-  -- Note: This assumes that A and B are disjoint. If they are not, we need to use the inclusion-exclusion principle.
+
+
+
+example {p : ProbSpace} : p.P ∅ = 0 := by
+  let f : Nat -> Set p.Ωt := λ _ => ∅
+  have H1: cpd f := by
+    simp [cpd];
+    grind only [= Set.mem_empty_iff_false, = Set.mem_inter_iff]
+  have H2: inF p.F f := by
+    simp [inF];
+    intro i
+    apply p.σ_algebra.F_empty
+  have h := p.pm.countable_add f H1 H2
+  simp_all only [forall_const, Set.iUnion_empty, tsum_const, Nat.card_eq_zero_of_infinite, zero_nsmul, f]
+
+example {p : ProbSpace} (A B : Set p.Ωt) (H1 : A ∈ p.F) (H2 : B ∈ p.F) :
+p.P (A ∪ B) = p.P A + p.P B - p.P (A ∩ B) := by
+  let f : Nat -> Set p.Ωt :=
+    λ i => if i = 0 then A else if i = 1 then B else A ∩ B
+  have H3: cpd f := by sorry
+  have H4: inF p.F f := by sorry
+  have h := p.pm.countable_add f H3 H4
