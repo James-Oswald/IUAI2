@@ -77,7 +77,7 @@ lemma SigmaAlgebra.closed_countable_inter [SigmaAlgebra F] (A : Nat -> Set Ωt) 
   apply SigmaAlgebra.closed_comp
   exact A i
 
-lemma SigmaAlgebra.closed_fin_union [SigmaAlgebra F]
+lemma SigmaAlgebra.closed_union [SigmaAlgebra F]
 (A B : Set Ωt) (H1: A ∈ F) (H2 : B ∈ F):
 A ∪ B ∈ F := by
   let f : Nat -> Set Ωt
@@ -95,6 +95,26 @@ A ∪ B ∈ F := by
   rw [iUnion_split_2] at H
   simp only [Set.iUnion_empty, Set.union_empty, f] at H
   exact H
+
+lemma SigmaAlgebra.closed_inter [SigmaAlgebra F]
+(A B : Set Ωt) (H1: A ∈ F) (H2 : B ∈ F):
+A ∩ B ∈ F := by
+  rw [Set.inter_eq_compl_compl_union_compl]
+  apply SigmaAlgebra.closed_comp
+  apply SigmaAlgebra.closed_union
+  apply SigmaAlgebra.closed_comp
+  exact H1
+  apply SigmaAlgebra.closed_comp
+  exact H2
+
+lemma SigmaAlgebra.closed_diff [SigmaAlgebra F]
+(A B : Set Ωt) (H1: A ∈ F) (H2 : B ∈ F):
+A \ B ∈ F := by
+  rw [Set.diff_eq]
+  apply SigmaAlgebra.closed_inter
+  exact H1
+  apply SigmaAlgebra.closed_comp
+  exact H2
 
 end SigmaAlgebra
 
@@ -141,8 +161,6 @@ lemma ProbSpace.p_ite {α : Type} (p : ProbSpace) {P : α -> Prop} [DecidablePre
   . simp [h]
   . simp [h]
 
-
-
 lemma ProbSpace.p_empty_zero (p : ProbSpace) : p.P ∅ = 0 := by
   let f : Nat -> Set p.Ωt := λ _ => ∅
   have H1: cpd f := by
@@ -153,7 +171,15 @@ lemma ProbSpace.p_empty_zero (p : ProbSpace) : p.P ∅ = 0 := by
     intro i
     apply p.σ_algebra.F_empty
   have H3 : Summable (p.P ∘ f) := by
-    sorry
+    have: HasSum (p.P ∘ f) 0 := by
+      have: ∀ b ∉ (∅ : Finset Nat), (p.P ∘ f) b = 0 := by
+        intros b H
+        simp [f]
+        exact p.p_empty_zero
+      have := hasSum_sum_of_ne_finset_zero this
+      rw [Finset.sum_empty] at this
+      exact this
+    exact this.summable
   have h := p.pm.countable_add f H1 H2 H3
   simp_all only [forall_const, Set.iUnion_empty, tsum_const, Nat.card_eq_zero_of_infinite, zero_nsmul, f]
 

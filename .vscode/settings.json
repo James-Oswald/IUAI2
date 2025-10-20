@@ -21,6 +21,7 @@
         "Surjective",
         "symm",
         "tendsto",
+        "tsub",
         "tsum",
         "uncomputable"
     ]

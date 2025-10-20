@@ -1,6 +1,7 @@
 
 import Mathlib.Computability.Language
 
-def BinStr :=
+-- The canonical type of binary strings
+abbrev BinStr : Type := List Bool
 
-notation "𝔹" => Language Bool
+abbrev BinStringN (n : Nat) : Type := { l : BinStr // l.length = n }

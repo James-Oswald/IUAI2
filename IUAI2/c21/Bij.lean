@@ -1,59 +1,106 @@
 
-import Mathlib.Algebra.Order.Floor.Div
+import IUAI2.c21.BinStr
+import Mathlib
 
-@[simp]
-def l (n : Nat) : Nat :=
-    (Nat.log2 n) + 1
+-- -- The binary string length of 1 + n
+-- @[simp]
+-- def l (n : Nat) : Nat :=
+--     (Nat.log2 (n + 1)) + 1
 
--- The ith binary digit of n
-@[simp]
-def Bi (n i : Nat) : Nat :=
-    (n ⌊/⌋ 2^((l n) - i)) % 2
+-- -- The ith binary digit of n
+-- @[simp]
+-- def Bi (n i : Nat) : Nat :=
+--     (n ⌊/⌋ 2^((l n) - i)) % 2
 
--- Bi only returns 0 or 1
-lemma Bi_01 (n i : Nat) : Bi n i ≤ 1 := by
-    simp only [Bi]
-    have H := @Nat.mod_lt (n ⌊/⌋ 2 ^ (l n - i) % 2) 2
-        (by simp only [gt_iff_lt, Nat.ofNat_pos])
-    omega
+-- -- Bi only returns leq 1
+-- lemma Bi_leq_1 (n i : Nat) : Bi n i ≤ 1 := by
+--     simp only [Bi]
+--     omega
 
--- The first digit of every binary number representation is 1
-lemma Bi_one_one (n : Nat) (H : n > 0) : Bi n 1 = 1 := by
-    simp_all [Bi, l]
-    have H3 := @Nat.log2_self_le n (by omega)
-    sorry
+-- lemma Bi_0_or_1 (n i : Nat) : Bi n i = 0 ∨ Bi n i = 1 := by
+--     have H := Bi_leq_1 n i
+--     omega
 
-def Bu (n : Nat) : List Nat :=
-    List.range (l n + 1) |>.tail |>.map (Bi n ·)
+-- def Bib (n i : Nat) : Bool :=
+--     if Bi n i = 1 then true else false
 
--- The binary representation of n contains only 0s and 1s
-lemma Bu_01 (n : Nat) : ∀e ∈ Bu n, e ≤ 1 := by
-    intro e he
-    simp_all only [
-      Bu, Bi, l,
-      Nat.floorDiv_eq_div, List.tail_range,
-      add_tsub_cancel_right, List.mem_map,
-      List.mem_range'_1]
-    omega
-
--- The binary representation of n
-def B (n : Nat) : BinStr := sorry
+-- def B (s n : Nat) : BinStr :=
+--     List.map (Bib n ·) (List.range s)
 
 
--- Function that produces the binary representation of n
-def cbu (n : Nat) : List Nat :=
-    Bu (n + 1) |>.tail
+def bits : Nat -> BinStr
+| 0 => []
+| n + 1 =>
+    let b := if (n + 1) % 2 = 1 then true else false
+    bits ((n + 1) / 2) ++ [b]
 
--- The binary representation of n contains only 0s and 1s
-lemma cbu_01 (n : Nat) : ∀e ∈ cbu n, e ≤ 1 := by
-    intro e H
-    simp only [cbu] at H
-    apply Bu_01 (n + 1)
-    exact List.mem_of_mem_tail H
+lemma bits_leq (n : Nat) (H : n > 0) : (bits n).length ≤ (bits (n + 1)).length := by
+    induction n
+    . case zero => contradiction
+    . case succ n ih =>
+      by_cases h : n = 0
+      . case pos =>
+        rw [h]
+        simp [bits]
+      . case neg =>
+        have H3: n > 0 := by omega
+        have H2 : (bits n).length ≤ (bits (n + 1)).length := ih H3
+        simp [bits]
 
--- The canonical bijection between binary strings and natural numbers
-def cb (n : Nat) : BinString :=
-    ⟨cbu n, cbu_01 n⟩
+
+example (n : Nat) (H : n > 0): (bits n).length = Nat.log2 n + 1 := by
+    induction n
+    . case zero => contradiction
+    . case succ n ih =>
+        by_cases h : n = 0
+        . case pos =>
+            rw [h]
+            simp [bits]
+            rw [Nat.log2]
+            simp only [ge_iff_le, Nat.not_ofNat_le_one, ↓reduceIte]
+        . case neg =>
+            have H3: n > 0 := by omega
+            have H2 : (bits n).length = Nat.log2 n + 1 := ih H3
+            rw [Nat.log2] at H2
+            rw [Nat.log2]
+            by_cases h2 : n ≥ 2
+            by_cases h3 : n ≤ 1
+            . case pos => omega
+            . case neg =>
+              simp_all
+              have h4 : 1 ≤ n := by omega
+              simp [h4]
+
+
+
+
+
+def cb (n : Nat) : BinStr :=
+    (n + 1).bits.reverse.tail
+
+-- example (n : Nat) : 1 < (n + 1 + 1).size := by
+--     induction n using Nat.binaryRec
+--     . case z => sorry
+--     . case f b n ih =>
+--       have H2 : 1 + 1 ≤ (n + 1 + 1).size.succ := by sorry
+--       rw [<-@Nat.size_bit b _] at H2
+
+
+
+theorem cb_injective : Function.Injective cb := by
+    simp [Function.Injective]
+    intro a b H
+    have Hl : (cb a).length = (cb b).length := by rw [H]
+    induction a
+    induction b
+    · case zero.zero => simp
+    · case zero.succ b ih =>
+      simp only [cb, zero_add, Nat.one_bits, List.reverse_cons, List.reverse_nil, List.nil_append,
+        List.tail_cons, List.length_nil, List.tail_reverse, List.length_reverse,
+        List.length_dropLast, Nat.size_eq_bits_len] at Hl
+
+
+
 
 abbrev v : Nat := 6
 #eval l v
