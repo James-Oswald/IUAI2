@@ -45,7 +45,7 @@ lemma bits_leq (n : Nat) (H : n > 0) : (bits n).length ≤ (bits (n + 1)).length
       . case neg =>
         have H3: n > 0 := by omega
         have H2 : (bits n).length ≤ (bits (n + 1)).length := ih H3
-        simp [bits]
+        simp [bits] at H2
 
 
 example (n : Nat) (H : n > 0): (bits n).length = Nat.log2 n + 1 := by
