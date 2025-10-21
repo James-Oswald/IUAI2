@@ -28,55 +28,23 @@ import Mathlib
 --     List.map (Bib n ·) (List.range s)
 
 
-def bits : Nat -> BinStr
-| 0 => []
+def Nat.bits' : Nat -> {b : BinStr // b ≠ []}
+| 0 => ⟨[false], by simp⟩
 | n + 1 =>
     let b := if (n + 1) % 2 = 1 then true else false
-    bits ((n + 1) / 2) ++ [b]
+    ⟨bits' ((n + 1) / 2) ++ [b], by simp⟩
 
-lemma bits_leq (n : Nat) (H : n > 0) : (bits n).length ≤ (bits (n + 1)).length := by
-    induction n
-    . case zero => contradiction
-    . case succ n ih =>
-      by_cases h : n = 0
-      . case pos =>
-        rw [h]
-        simp [bits]
-      . case neg =>
-        have H3: n > 0 := by omega
-        have H2 : (bits n).length ≤ (bits (n + 1)).length := ih H3
-        simp [bits] at H2
-
-
-example (n : Nat) (H : n > 0): (bits n).length = Nat.log2 n + 1 := by
-    induction n
-    . case zero => contradiction
-    . case succ n ih =>
-        by_cases h : n = 0
-        . case pos =>
-            rw [h]
-            simp [bits]
-            rw [Nat.log2]
-            simp only [ge_iff_le, Nat.not_ofNat_le_one, ↓reduceIte]
-        . case neg =>
-            have H3: n > 0 := by omega
-            have H2 : (bits n).length = Nat.log2 n + 1 := ih H3
-            rw [Nat.log2] at H2
-            rw [Nat.log2]
-            by_cases h2 : n ≥ 2
-            by_cases h3 : n ≤ 1
-            . case pos => omega
-            . case neg =>
-              simp_all
-              have h4 : 1 ≤ n := by omega
-              simp [h4]
-
-
-
-
+def BinStr.nat : {b : BinStr // b ≠ []}  -> Nat
+| ⟨[false], _⟩ => 0
+| ⟨[true], _⟩ => 1
+| ⟨h::t, H⟩ => 2^t.length * (if h then 1 else 0) + BinStr.nat ⟨t, by simp [H]⟩
 
 def cb (n : Nat) : BinStr :=
-    (n + 1).bits.reverse.tail
+    (n + 1).bits'.tail
+
+def cb
+
+
 
 -- example (n : Nat) : 1 < (n + 1 + 1).size := by
 --     induction n using Nat.binaryRec
