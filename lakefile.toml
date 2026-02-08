@@ -12,10 +12,5 @@ name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4.git"
 scope = "leanprover-community"
 
-[[require]]
-name = "Canonical"
-git = "https://github.com/chasenorman/CanonicalLean.git"
-scope = "leanprover-community"
-
 [[lean_lib]]
 name = "IUAI2"
