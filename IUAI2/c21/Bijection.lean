@@ -91,6 +91,24 @@ theorem b0_to_nat_to_b0 : nat_to_b0 (b0_to_nat x) = x := by
   grind [l1_to_nat_to_l1]
 
 
+theorem b0_to_nat_bijective : Function.Bijective b0_to_nat := by
+  apply Function.bijective_iff_has_inverse.mpr
+  use nat_to_b0
+  constructor
+  · simp only [Function.LeftInverse]
+    exact b0_to_nat_to_b0
+  · simp only [Function.RightInverse]
+    exact nat_to_b0_to_nat
+
+theorem nat_to_b0_bijective : Function.Bijective nat_to_b0 := by
+  apply Function.bijective_iff_has_inverse.mpr
+  use b0_to_nat
+  constructor
+  · simp only [Function.LeftInverse]
+    exact nat_to_b0_to_nat
+  · simp only [Function.RightInverse]
+    exact b0_to_nat_to_b0
+
 ---- Defining Encoded Length ----
 
 @[grind, simp, aesop safe]
@@ -281,9 +299,6 @@ theorem b0_to_nat_is_canonical_bijection_inverse :
   -- The 0-based big-endian decoding `b0_to_nat` is, in fact, the canonical bijection inverse from
     -- ℕ → 𝔹* defined in the book by Proposition 2.1.2.
   exact b0_value_formula x
-
----- Bijection Length Bound ----
-
 
 lemma l1_length_bound (x : BinStr) :
     2^x.length ≤ l1_to_nat x ∧ l1_to_nat x ≤ 2^(x.length + 1) - 1 := by
@@ -771,7 +786,3 @@ lemma l1_to_nat_preserves_pred : x ≠ [] → l1_to_nat (l1_pred x) = (l1_to_nat
 @[grind, simp, aesop unsafe]
 lemma b0_to_nat_preserves_pred : x ≠ [] → b0_to_nat (b0_pred x) = (b0_to_nat x).pred := by
   simp_all
-
----- Biblography ----
-
--- Hutter, M., Quarel, D., Catt, E.: An Introduction to Universal Artificial Intelligence. CRC Press, 2024 christmas edn. (2024)

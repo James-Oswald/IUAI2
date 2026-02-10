@@ -1,6 +1,4 @@
 
-import Mathlib.Computability.Language
-
 -- The canonical type of binary strings
 abbrev BinStr : Type := List Bool
 
