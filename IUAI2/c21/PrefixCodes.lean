@@ -49,6 +49,39 @@ def E : Nat -> 𝔹* -> 𝔹*
 | 0, x => List.replicate (b0_to_nat x) true ++ [false]
 | i + 1, x => E i (nat_to_b0 x.length) ++ x
 
+@[simp]
+def E_inv_aux : Nat -> Nat -> 𝔹* -> 𝔹*
+| 0, s, x => x.take s
+| n + 1, s, x => E_inv_aux n (b0_to_nat (x.take s)) (x.drop s)
+
+@[simp]
+def E_inv : Nat -> 𝔹* -> 𝔹*
+| 0, x => nat_to_b0 (x.findIdx (· = false))
+| n + 1, x => let p := (x.findIdx (· = false)); E_inv_aux n p (x.drop (p + 1))
+
+
+-- @[simp]
+-- def E_inv' : Nat -> 𝔹* -> 𝔹*
+-- | 0, x => nat_to_b0 (x.findIdx (· = false) + 1)
+-- | n + 1, x => let s := b0_to_nat (E_inv' n x); (x.drop s).take
+
+-- -- Test the correctness of E_inv and E
+-- #eval ∀ n : Fin 3 , ∀ m : Fin 100, E_inv n (E n (nat_to_b0 m)) = nat_to_b0 m
+
+local notation:max "|" l "|" => List.length l
+
+theorem E_inv_E_id (i : Nat) (x : 𝔹*) : E_inv i (E i x) = x := by
+  -- induction i <;> induction x
+  -- . case zero.nil => aesop
+  -- . case zero.cons b x ih => simp_all; grind
+  -- · case succ.nil n ih =>
+  --   simp_all [E, E_inv]
+  sorry
+
+
+
+
+
 -- #eval (nat_to_b0 1000).toString
 -- #eval (E 2 (nat_to_b0 1000)).toString
 
@@ -323,6 +356,7 @@ x.length = y.length := by
     exact b0_to_nat_bijective.left H'
   . case succ i ih =>
     unfold E at H
+    sorry
 
 
 lemma E_1_prefix_free : prefix_free' (E 1) := by
@@ -334,6 +368,7 @@ lemma E_1_prefix_free : prefix_free' (E 1) := by
   by_cases H2 : x = y
   . case pos => subst H2; simp_all only [List.append_right_eq_self]
   . case neg =>
+    sorry
 
     --unfold E at H
 

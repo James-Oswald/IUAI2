@@ -9,7 +9,7 @@ variable (n m l : Nat)
 
 ---- Defining Bijection ----
 
-@[grind, aesop safe]
+@[grind, aesop safe, simp]
 def nat_to_l1 (n : Nat) : 𝔹* :=
   -- 1-based little-endian encoding with implicit 1.  This is a bijection from ℕ⁺ to 𝔹*, as proven
     -- in theorem `nat_to_l1_to_nat`.
@@ -24,7 +24,7 @@ def nat_to_l1 (n : Nat) : 𝔹* :=
     | 0 => false :: nat_to_l1 (n / 2)
     | _ => true :: nat_to_l1 (n / 2)
 
-@[grind, aesop safe]
+@[grind, aesop safe, simp]
 def l1_to_nat : 𝔹* → Nat
   -- 1-based little-endian decoding with implicit 1.
 | List.nil => 1
