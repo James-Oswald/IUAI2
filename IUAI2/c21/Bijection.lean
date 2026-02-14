@@ -474,6 +474,11 @@ lemma llex_colex_reverse_same_length :
       cases a <;> cases b <;> simp [ih_applied]
       grind
 
+@[grind, aesop unsafe]
+lemma llex_colex_reverse :
+    llex x y = lcolex x.reverse y.reverse := by
+  grind
+
 
 lemma nat_to_l1_is_length_colexicographical_when_diff_length :
     n ≠ 0 ∧ m ≠ 0 ∧ n < m ∧ (nat_to_l1 n).length ≠ (nat_to_l1 m).length →
@@ -655,6 +660,59 @@ theorem nat_to_b0_is_length_lexicographical : n < m → llex (nat_to_b0 n) (nat_
   -- The canonical bijection from ℕ to 𝔹* orders the binary strings length-lexicographically.
   -- Part of Proposition 2.1.1.
   grind
+
+@[grind, aesop safe]
+theorem lcolex_is_irreflexive : ¬ lcolex x x := by
+  intro h1
+  induction x with
+  | nil => simp_all
+  | cons a x' =>
+    rw [lcolex] at h1
+    rw [length_colex_compareTo.eq_def] at h1
+    suffices (
+        if length_colex_compareTo x' x' ≠ 0
+        then length_colex_compareTo x' x'
+        else bool_compareTo a a) = -1 by
+      aesop
+    have s1 : length_colex_compareTo x' x' ≠ 0 := by aesop
+    simp_all
+
+@[grind, aesop safe]
+lemma nat_to_l1_is_length_colexicographical_backwards_contrapositive :
+    n ≠ 0 → ¬ n < m → ¬ lcolex (nat_to_l1 n) (nat_to_l1 m) := by
+  intro h1 h2 h3
+  have s1 : n = m ∨ n > m := by grind
+  cases s1
+  ·
+    have s2 : (nat_to_l1 n) = (nat_to_l1 m) := by grind
+    grind
+  ·
+    have s2 : m < n := by grind
+    have s3 : lcolex (nat_to_l1 m) (nat_to_l1 n) = true := by grind
+    have s4 : lcolex (nat_to_l1 n) (nat_to_l1 n) = true := by grind
+    grind
+
+@[grind, aesop safe]
+lemma nat_to_l1_is_length_colexicographical_backwards :
+    n ≠ 0 → lcolex (nat_to_l1 n) (nat_to_l1 m) → n < m := by
+  grind
+
+@[grind]
+lemma nat_to_l1_is_length_colexicographical_iff :
+    n ≠ 0 → (n < m ↔ lcolex (nat_to_l1 n) (nat_to_l1 m)) := by
+  grind
+
+@[grind]
+lemma nat_to_b0_is_length_lexicographical_iff :
+    n < m ↔ llex (nat_to_b0 n) (nat_to_b0 m) := by
+  -- A stronger formalization of the claim that the canonical bijection from ℕ to 𝔹* orders the
+  -- binary strings length-lexicographically.  Part of Proposition 2.1.1.
+  constructor
+  · grind
+  · intro h
+    have s1 : n + 1 ≠ 0 := by grind
+    have s2 := (nat_to_l1_is_length_colexicographical_iff (n + 1) (m + 1) s1).2
+    grind
 
 
 lemma same_length_llex_iff_lex (x y : BinStr) (h : x.length = y.length) :
