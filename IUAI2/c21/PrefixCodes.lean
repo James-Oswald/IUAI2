@@ -67,24 +67,85 @@ def E_inv : Nat -> 𝔹* -> 𝔹*
 | 0, x => nat_to_b0 (x.findIdx (· = false))
 | n + 1, x => let p := (x.findIdx (· = false)); E_inv_aux n p (x.drop (p + 1))
 
+@[simp]
+def E_inv_aux' : Nat -> 𝔹* -> (𝔹* × 𝔹*)
+| 0, x =>
+  let n := (x.findIdx (· = false));
+  ⟨nat_to_b0 n, x.drop (n + 1)⟩
+| n + 1, x =>
+  let ⟨l, f⟩ := E_inv_aux' n x;
+  let le := b0_to_nat l;
+  ⟨f.take le, f.drop le⟩
+
+lemma E_inv_aux'_E_aux_1 (i : Nat) (x : 𝔹*) :
+(E_inv_aux' i x).2 = (E_inv_aux' i.succ x).1 ++ (E_inv_aux' i.succ x).2 := by
+  simp_all only [E_inv_aux', b0_to_nat, List.take_append_drop]
+
+-- lemma E_inv_aux'_E_aux_2 (i : Nat) (x : 𝔹*) (H : (E_inv_aux' i x).2 ≠ []):
+-- (E_inv_aux' i x).1 = nat_to_b0 (E_inv_aux' i.succ x).1.length := by
+--   grind
+
+@[simp]
+def E_inv' : Nat -> 𝔹* -> 𝔹*
+| n, x => (E_inv_aux' n x).1
+
+@[simp]
+def E_inv'' : Nat -> 𝔹* -> 𝔹*
+| 0, x => nat_to_b0 (x.findIdx (· = false))
+| n + 1, x => (E_inv_aux' n x).2
+
+#eval (E_inv' 0 (E 0 [true, false, true])).toString
+#eval (E_inv'' 2 (E 2 [true, false, true])).toString
+
+#eval ∀ n : Fin 5 , ∀ m : Fin 100, E_inv'' n (E n (nat_to_b0 m)) = nat_to_b0 m
 
 -- @[simp]
--- def E_inv' : Nat -> 𝔹* -> 𝔹*
--- | 0, x => nat_to_b0 (x.findIdx (· = false) + 1)
--- | n + 1, x => let s := b0_to_nat (E_inv' n x); (x.drop s).take
+-- def E_inv_aux'' : Nat -> 𝔹* -> (Nat × 𝔹*)
+-- | 0, x =>
+--   let n := (x.findIdx (· = false));
+--   ⟨n, x.drop (n + 1)⟩
+-- | n + 1, x =>
+--   let ⟨l, f⟩ := E_inv_aux'' n x;
+--   let le := b0_to_nat (f.take l);
+--   ⟨le, f.drop le⟩
+
+-- @[simp]
+-- def E_inv'' : Nat -> 𝔹* -> 𝔹*
+-- | 0, x => (E_inv_aux'' 0 x).2
+-- | n + 1, x => (E_inv_aux'' (n - 1) x).2
+
+
+-- #eval (E 0 [true, false, true]).toString
+-- #eval (E_inv' 0 (E 0 [true, false, true])).toString
+-- #eval (E 1 [true, false, true]).toString
+-- #eval (E_inv' 1 (E 1 [true, false, true])).toString
+ #eval (E 2 [true, false, true])
+
+-- #eval (E_inv_aux'' 0 (E 2 [true, false, true]))
+-- #eval (E_inv'' 2 (E 2 [true, false, true])).toString
+-- #eval (E 3 [true, false, true]).toString
+-- #eval (E_inv' 3 (E 3 [true, false, true])).toString
 
 -- -- Test the correctness of E_inv and E
--- #eval ∀ n : Fin 3 , ∀ m : Fin 100, E_inv n (E n (nat_to_b0 m)) = nat_to_b0 m
+-- #eval ∀ n : Fin 5 , ∀ m : Fin 100, E_inv' n (E n (nat_to_b0 m)) = nat_to_b0 m
 
 -- local notation:max "|" l "|" => List.length l
 
--- theorem E_inv_E_id (i : Nat) (x : 𝔹*) : E_inv i (E i x) = x := by
---   -- induction i <;> induction x
---   -- . case zero.nil => aesop
---   -- . case zero.cons b x ih => simp_all; grind
---   -- · case succ.nil n ih =>
---   --   simp_all [E, E_inv]
---   sorry
+theorem E_inv_E_id (i : Nat) (x : 𝔹*) : E_inv'' i (E i x) = x := by
+  induction i generalizing x
+  . case zero =>
+    simp_all
+    grind
+  . case succ n ih =>
+    simp_all [-b0_to_nat, -nat_to_b0]
+
+
+
+    --have ih' := ih (nat_to_b0 x.length)
+    -- simp_all only [E, E_inv', E_inv_aux']
+    -- sorry
+
+
 
 
 
