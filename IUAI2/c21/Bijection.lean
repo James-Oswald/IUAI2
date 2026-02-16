@@ -356,61 +356,6 @@ theorem b0_length_lower : 2^x.length - 1 ≤ b0_to_nat x := by
   exact (b0_length_bound x).1
 
 -- TODO: We don't need these afaik
-<<<<<<< Updated upstream
----- Setup and Proof of Length-Lexicographicality of Canonical Bijection ----
-
--- @[grind, aesop safe]
--- def l1_succ (x : 𝔹*) :=
---   match x with
---   | [] => [false]
---   | false :: x' => true :: x'
---   | true :: x' => false :: l1_succ x'
-
--- @[grind, simp, aesop safe]
--- lemma l1_to_nat_preserves_succ : l1_to_nat (l1_succ x) = (l1_to_nat x).succ := by
---   induction x with
---   | nil => simp [l1_to_nat, l1_succ]
---   | cons a x' =>
---     rw [l1_succ.eq_def]
---     rw [l1_to_nat.eq_def]
---     grind
-
--- @[grind, aesop safe]
--- def same_length_lex : 𝔹* → 𝔹* → Bool
--- -- Lexicographical order for binary strings of the same length.
--- | [], [] => false
--- | a :: xs, b :: ys =>
---     if a != b then !a && b
---     else same_length_lex xs ys
--- | _, _ => false
-
--- @[simp, grind, aesop safe]
--- def llex (x y : 𝔹*) : Bool :=
---   -- Length-lexicographical order.
---   x.length < y.length || (x.length == y.length && same_length_lex x y)
-
--- @[simp, grind, aesop safe]
--- def bool_compareTo : Bool → Bool → SignType
--- | false, true => -1
--- | false, false => 0
--- | true, true => 0
--- | true, false => 1
-
--- @[grind, aesop unsafe]
--- def length_colex_compareTo : 𝔹* → 𝔹* → SignType
--- -- Returns -1, 0, or 1 if the first argument is respectively less than, equal to, or greater than
---   -- the second argument in length-colexicographical order (i.e. where comparison begins from the
---   -- right side of the string).
--- | [], [] => 0
--- | [], _ => -1
--- | _, [] => 1
--- | a :: x', b :: y' =>
---   let tail_result := length_colex_compareTo x' y'
---   if tail_result ≠ 0 then tail_result else bool_compareTo a b
-
-@[simp, grind, aesop safe]
-def lcolex (x y : BinStr) : Bool :=
-=======
 theorem b0_length_upper : b0_to_nat x ≤ 2^(x.length + 1) - 2 := by
   exact (b0_length_bound x).2
 
@@ -471,7 +416,6 @@ def length_colex_compareTo : 𝔹* → 𝔹* → SignType
 
 @[simp, grind, aesop safe]
 def lcolex (x y : 𝔹*) : Bool :=
->>>>>>> Stashed changes
   -- "Less than" in length-colexicographical order (i.e. where comparison begins from the right
     -- side of the string).
   -- This is convenient because a direct, cons-based definition of colexicographical order can be
@@ -480,11 +424,7 @@ def lcolex (x y : 𝔹*) : Bool :=
   length_colex_compareTo x y == -1
 
 
-<<<<<<< Updated upstream
-@[grind, aesop unsafe]
-=======
 @[grind =, aesop unsafe]
->>>>>>> Stashed changes
 lemma lcolex_compareTo_diff_length :
     x.length ≠ y.length →
     length_colex_compareTo x y = if x.length < y.length then -1 else 1 := by
@@ -507,11 +447,7 @@ lemma lcolex_compareTo_diff_length :
       simp [ih_applied]
       grind [SignType.neg_eq_zero_iff]
 
-<<<<<<< Updated upstream
-@[grind, aesop unsafe]
-=======
 @[grind =, aesop unsafe]
->>>>>>> Stashed changes
 lemma llex_colex_reverse_diff_length :
     x.length ≠ y.length → llex x y = lcolex x.reverse y.reverse := by
   intro h
@@ -523,11 +459,7 @@ lemma llex_colex_reverse_diff_length :
   rw [lcolex_compareTo_diff_length _ _ h_rev]
   simp_all
 
-<<<<<<< Updated upstream
-@[grind, aesop unsafe]
-=======
 @[grind =, aesop unsafe]
->>>>>>> Stashed changes
 lemma lcolex_compareTo_append_same_length :
     x.length = y.length →
     length_colex_compareTo (x ++ [a]) (y ++ [b]) =
@@ -558,11 +490,7 @@ lemma lcolex_compareTo_append_same_length :
 --       grind
 --       grind
 
-<<<<<<< Updated upstream
-@[grind, aesop unsafe]
-=======
 @[grind =, aesop unsafe]
->>>>>>> Stashed changes
 lemma llex_colex_reverse_same_length :
     x.length = y.length → llex x y = lcolex x.reverse y.reverse := by
   intro h
@@ -619,13 +547,8 @@ lemma llex_colex_reverse :
 --     omega
 --   simp [hlog_lt]
 
-<<<<<<< Updated upstream
-@[simp, grind, aesop safe]
-lemma lcolex_compareTo_refl (x : BinStr) :
-=======
 @[simp, grind =, aesop safe]
 lemma lcolex_compareTo_refl (x : 𝔹*) :
->>>>>>> Stashed changes
     length_colex_compareTo x x = 0 := by
   induction x with
   | nil =>
@@ -635,13 +558,8 @@ lemma lcolex_compareTo_refl (x : 𝔹*) :
     simp [ih]
     cases a <;> rfl
 
-<<<<<<< Updated upstream
-@[grind, aesop safe]
-lemma lcolex_l1_succ (x : BinStr) :
-=======
 @[grind =, aesop safe]
 lemma lcolex_l1_succ (x : 𝔹*) :
->>>>>>> Stashed changes
     lcolex x (l1_succ x) := by
   induction x with
   | nil =>
@@ -661,11 +579,7 @@ lemma lcolex_l1_succ (x : 𝔹*) :
       have ih_eq : length_colex_compareTo xs (l1_succ xs) == -1 := by grind
       simp_all
 
-<<<<<<< Updated upstream
-@[grind, aesop unsafe]
-=======
 @[grind =, aesop unsafe]
->>>>>>> Stashed changes
 lemma nat_to_l1_llex_nat_to_l1_succ :
     n ≠ 0 → lcolex (nat_to_l1 n) (nat_to_l1 n.succ) := by
   intro hn
@@ -679,11 +593,7 @@ lemma nat_to_l1_llex_nat_to_l1_succ :
   rw [h_succ]
   exact lcolex_l1_succ (nat_to_l1 n)
 
-<<<<<<< Updated upstream
-@[simp, grind]
-=======
 @[simp, grind =]
->>>>>>> Stashed changes
 lemma lcolex_compareTo_eq_zero_iff :
     length_colex_compareTo x y = 0 ↔ x = y := by
   constructor
@@ -711,11 +621,7 @@ lemma lcolex_compareTo_eq_zero_iff :
     rw [h]
     exact lcolex_compareTo_refl y
 
-<<<<<<< Updated upstream
-@[grind, aesop safe]
-=======
 @[grind ., aesop safe]
->>>>>>> Stashed changes
 lemma lcolex_compareTo_trans_neg :
     length_colex_compareTo x y = -1 →
     length_colex_compareTo y z = -1 →
@@ -746,11 +652,7 @@ lemma lcolex_compareTo_trans_neg :
             · grind
             · cases a <;> cases b <;> cases c <;> simp at hab hbc ⊢
 
-<<<<<<< Updated upstream
-@[grind, aesop safe]
-=======
 @[grind ., aesop safe]
->>>>>>> Stashed changes
 lemma lcolex_trans :
     lcolex x y → lcolex y z → lcolex x z := by
   grind
@@ -791,21 +693,13 @@ lemma lcolex_trans :
 
 --   exact this (m - n) n m hn_ne_0 hn_lt_m hlen_eq rfl
 
-<<<<<<< Updated upstream
-@[grind, aesop safe]
-=======
 @[grind =, aesop safe]
->>>>>>> Stashed changes
 lemma nat_to_l1_is_length_colexicographical :
     n ≠ 0 ∧ n < m → lcolex (nat_to_l1 n) (nat_to_l1 m) := by
   grind [nat_to_l1_is_length_colexicographical_when_same_length,
     nat_to_l1_is_length_colexicographical_when_diff_length]
 
-<<<<<<< Updated upstream
-@[grind, aesop unsafe]
-=======
 @[grind =, aesop unsafe]
->>>>>>> Stashed changes
 theorem nat_to_b0_is_length_lexicographical : n < m → llex (nat_to_b0 n) (nat_to_b0 m) := by
   -- The canonical bijection from ℕ to 𝔹* orders the binary strings length-lexicographically.
   -- Part of Proposition 2.1.1.
@@ -865,11 +759,7 @@ lemma nat_to_b0_is_length_lexicographical_iff :
     grind
 
 
-<<<<<<< Updated upstream
-lemma same_length_llex_iff_lex (x y : BinStr) (h : x.length = y.length) :
-=======
 lemma same_length_llex_iff_lex (x y : 𝔹*) (h : x.length = y.length) :
->>>>>>> Stashed changes
     same_length_lex x y = true ↔ List.Lex (· < ·) x y := by
   induction x generalizing y with
   | nil =>
@@ -899,11 +789,7 @@ lemma same_length_llex_iff_lex (x y : 𝔹*) (h : x.length = y.length) :
               contradiction
             · simp at h_rel
 
-<<<<<<< Updated upstream
-theorem length_llex_iff_shortlex (x y : BinStr) :
-=======
 theorem length_llex_iff_shortlex (x y : 𝔹*) :
->>>>>>> Stashed changes
     llex x y = true ↔ List.Shortlex (· < ·) x y := by
   -- llex is (a computational) equivalent to List.Shortlex.
   unfold llex List.Shortlex InvImage
@@ -912,17 +798,6 @@ theorem length_llex_iff_shortlex (x y : 𝔹*) :
 -- Proofs of some additional results for succ and pred on binary strings ----
 
 @[grind, simp, aesop safe]
-<<<<<<< Updated upstream
-def b0_succ (x : BinStr) :=
-  (l1_succ x.reverse).reverse
-
--- @[grind =, simp, aesop safe]
--- lemma b0_to_nat_preserves_succ : b0_to_nat (b0_succ x) = (b0_to_nat x).succ := by
---   grind
-
-@[grind, aesop safe]
-def l1_pred (x : BinStr) :=
-=======
 def b0_succ (x : 𝔹*) :=
   (l1_succ x.reverse).reverse
 
@@ -932,7 +807,6 @@ lemma b0_to_nat_preserves_succ : b0_to_nat (b0_succ x) = (b0_to_nat x).succ := b
 
 @[grind =, aesop safe]
 def l1_pred (x : 𝔹*) :=
->>>>>>> Stashed changes
   match x with
   | [] => []
   | [false] => []
@@ -940,77 +814,16 @@ def l1_pred (x : 𝔹*) :=
   | false :: x' => true :: l1_pred x'
 
 @[grind, simp, aesop safe]
-<<<<<<< Updated upstream
-def b0_pred (x : BinStr) :=
-  (l1_pred x.reverse).reverse
-
-@[grind, simp, aesop safe]
-lemma l1_pred_l1_succ (x : BinStr): l1_pred (l1_succ x) = x := by
-=======
 def b0_pred (x : 𝔹*) :=
   (l1_pred x.reverse).reverse
 
 @[grind =, simp, aesop safe]
 lemma l1_pred_l1_succ (x : 𝔹*): l1_pred (l1_succ x) = x := by
->>>>>>> Stashed changes
   induction x with
   | nil => simp [l1_succ, l1_pred]
   | cons a x' ih =>
     rw [l1_succ.eq_def]
     cases a
-<<<<<<< Updated upstream
-    · simp [l1_pred]
-    · grind
-
-@[grind, simp, aesop safe]
-lemma b0_pred_b0_succ (x : BinStr) : b0_pred (b0_succ x) = x := by
-  simp
-
--- @[grind =, simp, aesop unsafe]
--- lemma l1_succ_l1_pred (x : 𝔹*): x ≠ [] → l1_succ (l1_pred x) = x := by
---   induction x with
---   | nil => simp
---   | cons a x' ih =>
---     intro h
---     match mh: x' with
---     | [] =>
---       rw [l1_succ.eq_def]
---       rw [l1_pred.eq_def]
---       grind only [#5790, #16d8]
---     | b :: x'' =>
---       have ih1 : l1_succ (l1_pred (b :: x'')) = b :: x'' := by simp_all
---       rw [l1_pred.eq_def]
---       grind only [l1_succ]
-
--- @[grind =, simp, aesop unsafe]
--- lemma b0_succ_b0_pred (x : 𝔹*): x ≠ [] → b0_succ (b0_pred x) = x := by
---   grind [l1_pred.eq_def, l1_succ.eq_def]
-
--- @[grind =, simp, aesop unsafe]
--- lemma l1_to_nat_preserves_pred : x ≠ [] → l1_to_nat (l1_pred x) = (l1_to_nat x).pred := by
---   intro h
---   suffices (l1_to_nat (l1_pred x)).succ = l1_to_nat x by
---     have s1 : (l1_to_nat x).pred.succ = l1_to_nat x := by
---       rw [Nat.succ_pred (by simp [l1_to_nat_ne_0])]
---     symm
---     suffices (l1_to_nat (l1_pred x)).succ = (l1_to_nat x).pred.succ by grind
---     suffices (l1_to_nat (l1_pred x)).succ = (l1_to_nat x) by simp_all
---     rw [← l1_to_nat_preserves_succ]
---     rw [l1_succ_l1_pred x (by exact h)]
---   symm
---   have s1 : l1_to_nat (l1_succ (l1_pred x)) = (l1_to_nat (l1_pred x)).succ := by
---     refine l1_to_nat_preserves_succ ?_
---   rw [l1_succ_l1_pred x h] at s1
---   exact s1
-
-@[grind, simp, aesop unsafe]
-lemma b0_to_nat_preserves_pred : x ≠ [] → b0_to_nat (b0_pred x) = (b0_to_nat x).pred := by
-  simp_all
-
----- Biblography ----
-
--- Hutter, M., Quarel, D., Catt, E.: An Introduction to Universal Artificial Intelligence. CRC Press, 2024 christmas edn. (2024)
-=======
     · simp only [l1_pred]
     · grind only [l1_pred, l1_succ]
 
@@ -1058,4 +871,3 @@ lemma l1_to_nat_preserves_pred : x ≠ [] → l1_to_nat (l1_pred x) = (l1_to_nat
 @[grind =, simp, aesop unsafe]
 lemma b0_to_nat_preserves_pred : x ≠ [] → b0_to_nat (b0_pred x) = (b0_to_nat x).pred := by
   simp_all
->>>>>>> Stashed changes
