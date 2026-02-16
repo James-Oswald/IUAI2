@@ -131,13 +131,14 @@ def E_inv'' : Nat -> 𝔹* -> 𝔹*
 
 -- local notation:max "|" l "|" => List.length l
 
-theorem E_inv_E_id (i : Nat) (x : 𝔹*) : E_inv'' i (E i x) = x := by
-  induction i generalizing x
-  . case zero =>
-    simp_all
-    grind
-  . case succ n ih =>
-    simp_all [-b0_to_nat, -nat_to_b0]
+-- theorem E_inv_E_id (i : Nat) (x : 𝔹*) : E_inv'' i (E i x) = x := by
+--   induction i generalizing x
+--   . case zero =>
+--     simp_all
+--     grind
+--   . case succ n ih =>
+--     simp_all [-b0_to_nat, -nat_to_b0]
+--     sorry
 
 
 

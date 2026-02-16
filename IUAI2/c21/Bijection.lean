@@ -356,13 +356,6 @@ theorem b0_length_lower : 2^x.length - 1 ≤ b0_to_nat x := by
   exact (b0_length_bound x).1
 
 -- TODO: We don't need these afaik
-theorem b0_length_upper : b0_to_nat x ≤ 2^(x.length + 1) - 2 := by
-  exact (b0_length_bound x).2
-
-theorem b0_length_lower : 2^x.length - 1 ≤ b0_to_nat x := by
-  exact (b0_length_bound x).1
-
--- TODO: We don't need these afaik
 -- Setup and Proof of Length-Lexicographicality of Canonical Bijection ----
 
 @[grind, aesop safe]
@@ -466,29 +459,29 @@ lemma lcolex_compareTo_append_same_length :
     let last_result := bool_compareTo a b
     if last_result ≠ 0 then last_result else length_colex_compareTo x y := by
 
---   intro h
---   induction x generalizing y with
---   | nil =>
---     cases y with
---     | nil =>
---       simp [length_colex_compareTo]
---     | cons c zs =>
---       simp at h
---   | cons c zs ih =>
---     cases y with
---     | nil =>
---       simp at h
---     | cons d ws =>
---       simp at h
---       simp [length_colex_compareTo]
---       have ih_applied := ih ws h
---       rw [ih_applied]
---       simp
---       split
---       · rfl
---       · rfl
---       grind
---       grind
+  intro h
+  induction x generalizing y with
+  | nil =>
+    cases y with
+    | nil =>
+      simp [length_colex_compareTo]
+    | cons c zs =>
+      simp at h
+  | cons c zs ih =>
+    cases y with
+    | nil =>
+      simp at h
+    | cons d ws =>
+      simp at h
+      simp [length_colex_compareTo]
+      have ih_applied := ih ws h
+      rw [ih_applied]
+      simp
+      split
+      · rfl
+      · rfl
+      grind
+      grind
 
 @[grind =, aesop unsafe]
 lemma llex_colex_reverse_same_length :
@@ -524,28 +517,28 @@ lemma llex_colex_reverse :
   grind
 
 
--- lemma nat_to_l1_is_length_colexicographical_when_diff_length :
---     n ≠ 0 ∧ m ≠ 0 ∧ n < m ∧ (nat_to_l1 n).length ≠ (nat_to_l1 m).length →
---     lcolex (nat_to_l1 n) (nat_to_l1 m) := by
---   intro ⟨hn_ne_0, hm_ne_0, hn_lt_m, hlen_ne⟩
---   rw [lcolex]
---   rw [lcolex_compareTo_diff_length _ _ hlen_ne]
---   have hn_len : (nat_to_l1 n).length = Nat.log2 n := by
---     rw [← nat_l1_length]
---     exact nat_l1_length_formula n hn_ne_0
---   have hm_len : (nat_to_l1 m).length = Nat.log2 m := by
---     rw [← nat_l1_length]
---     exact nat_l1_length_formula m hm_ne_0
---   rw [hn_len, hm_len]
---   have hlog_le : Nat.log2 n ≤ Nat.log2 m := by
---     rw [Nat.log2_eq_log_two, Nat.log2_eq_log_two]
---     exact Nat.log_mono_right (Nat.le_of_lt hn_lt_m)
---   have hlog_ne : Nat.log2 n ≠ Nat.log2 m := by
---     rw [← hn_len, ← hm_len]
---     exact hlen_ne
---   have hlog_lt : Nat.log2 n < Nat.log2 m := by
---     omega
---   simp [hlog_lt]
+lemma nat_to_l1_is_length_colexicographical_when_diff_length :
+    n ≠ 0 ∧ m ≠ 0 ∧ n < m ∧ (nat_to_l1 n).length ≠ (nat_to_l1 m).length →
+    lcolex (nat_to_l1 n) (nat_to_l1 m) := by
+  intro ⟨hn_ne_0, hm_ne_0, hn_lt_m, hlen_ne⟩
+  rw [lcolex]
+  rw [lcolex_compareTo_diff_length _ _ hlen_ne]
+  have hn_len : (nat_to_l1 n).length = Nat.log2 n := by
+    rw [← nat_l1_length]
+    exact nat_l1_length_formula n hn_ne_0
+  have hm_len : (nat_to_l1 m).length = Nat.log2 m := by
+    rw [← nat_l1_length]
+    exact nat_l1_length_formula m hm_ne_0
+  rw [hn_len, hm_len]
+  have hlog_le : Nat.log2 n ≤ Nat.log2 m := by
+    rw [Nat.log2_eq_log_two, Nat.log2_eq_log_two]
+    exact Nat.log_mono_right (Nat.le_of_lt hn_lt_m)
+  have hlog_ne : Nat.log2 n ≠ Nat.log2 m := by
+    rw [← hn_len, ← hm_len]
+    exact hlen_ne
+  have hlog_lt : Nat.log2 n < Nat.log2 m := by
+    omega
+  simp [hlog_lt]
 
 @[simp, grind =, aesop safe]
 lemma lcolex_compareTo_refl (x : 𝔹*) :
@@ -657,41 +650,41 @@ lemma lcolex_trans :
     lcolex x y → lcolex y z → lcolex x z := by
   grind
 
--- lemma nat_to_l1_is_length_colexicographical_when_same_length :
---     n ≠ 0 ∧ n < m ∧ (nat_to_l1 n).length = (nat_to_l1 m).length →
---     lcolex (nat_to_l1 n) (nat_to_l1 m) := by
---   intro ⟨hn_ne_0, hn_lt_m, hlen_eq⟩
+lemma nat_to_l1_is_length_colexicographical_when_same_length :
+    n ≠ 0 ∧ n < m ∧ (nat_to_l1 n).length = (nat_to_l1 m).length →
+    lcolex (nat_to_l1 n) (nat_to_l1 m) := by
+  intro ⟨hn_ne_0, hn_lt_m, hlen_eq⟩
 
---   have : ∀ k, ∀ n m, n ≠ 0 → n < m → (nat_to_l1 n).length = (nat_to_l1 m).length →
---          m - n = k → lcolex (nat_to_l1 n) (nat_to_l1 m) := by
---     intro k
---     induction k with
---     | zero => grind
---     | succ k' ih =>
---       intro n m hn_ne_0 hn_lt_m hlen_eq hk
---       by_cases h : m = n.succ
---       · rw [h]
---         exact nat_to_l1_llex_nat_to_l1_succ n hn_ne_0
---       · have hn_succ_lt_m : n.succ < m := by omega
---         have hn_succ_ne_0 : n.succ ≠ 0 := by omega
---         have hlen_n_succ : (nat_to_l1 n.succ).length = (nat_to_l1 m).length := by
---           rw [← nat_l1_length, nat_l1_length_formula n hn_ne_0] at hlen_eq
---           rw [← nat_l1_length, nat_l1_length_formula m (by omega)] at hlen_eq
---           rw [← nat_l1_length, nat_l1_length_formula n.succ hn_succ_ne_0]
---           rw [← nat_l1_length, nat_l1_length_formula m (by omega)]
---           have h1 : Nat.log2 n ≤ Nat.log2 n.succ := by
---             rw [Nat.log2_eq_log_two, Nat.log2_eq_log_two]
---             exact Nat.log_mono_right (Nat.le_succ n)
---           have h2 : Nat.log2 n.succ ≤ Nat.log2 m := by
---             rw [Nat.log2_eq_log_two, Nat.log2_eq_log_two]
---             exact Nat.log_mono_right (Nat.le_of_lt hn_succ_lt_m)
---           omega
---         have h_diff : m - n.succ = k' := by omega
---         have ih_applied := ih n.succ m hn_succ_ne_0 hn_succ_lt_m hlen_n_succ h_diff
---         have h1 := nat_to_l1_llex_nat_to_l1_succ n hn_ne_0
---         exact lcolex_trans (nat_to_l1 n) (nat_to_l1 n.succ) (nat_to_l1 m) h1 ih_applied
+  have : ∀ k, ∀ n m, n ≠ 0 → n < m → (nat_to_l1 n).length = (nat_to_l1 m).length →
+         m - n = k → lcolex (nat_to_l1 n) (nat_to_l1 m) := by
+    intro k
+    induction k with
+    | zero => grind
+    | succ k' ih =>
+      intro n m hn_ne_0 hn_lt_m hlen_eq hk
+      by_cases h : m = n.succ
+      · rw [h]
+        exact nat_to_l1_llex_nat_to_l1_succ n hn_ne_0
+      · have hn_succ_lt_m : n.succ < m := by omega
+        have hn_succ_ne_0 : n.succ ≠ 0 := by omega
+        have hlen_n_succ : (nat_to_l1 n.succ).length = (nat_to_l1 m).length := by
+          rw [← nat_l1_length, nat_l1_length_formula n hn_ne_0] at hlen_eq
+          rw [← nat_l1_length, nat_l1_length_formula m (by omega)] at hlen_eq
+          rw [← nat_l1_length, nat_l1_length_formula n.succ hn_succ_ne_0]
+          rw [← nat_l1_length, nat_l1_length_formula m (by omega)]
+          have h1 : Nat.log2 n ≤ Nat.log2 n.succ := by
+            rw [Nat.log2_eq_log_two, Nat.log2_eq_log_two]
+            exact Nat.log_mono_right (Nat.le_succ n)
+          have h2 : Nat.log2 n.succ ≤ Nat.log2 m := by
+            rw [Nat.log2_eq_log_two, Nat.log2_eq_log_two]
+            exact Nat.log_mono_right (Nat.le_of_lt hn_succ_lt_m)
+          omega
+        have h_diff : m - n.succ = k' := by omega
+        have ih_applied := ih n.succ m hn_succ_ne_0 hn_succ_lt_m hlen_n_succ h_diff
+        have h1 := nat_to_l1_llex_nat_to_l1_succ n hn_ne_0
+        exact lcolex_trans (nat_to_l1 n) (nat_to_l1 n.succ) (nat_to_l1 m) h1 ih_applied
 
---   exact this (m - n) n m hn_ne_0 hn_lt_m hlen_eq rfl
+  exact this (m - n) n m hn_ne_0 hn_lt_m hlen_eq rfl
 
 @[grind =, aesop safe]
 lemma nat_to_l1_is_length_colexicographical :
