@@ -7,7 +7,9 @@ variable (x y z : 𝔹*)
 variable (a b c : Bool)
 variable (n m l : Nat)
 
----- Defining Bijection ----
+-------------------------------------------------------------------------------
+-- Defining the encoding and decoding functions
+-------------------------------------------------------------------------------
 
 @[grind, aesop safe, simp]
 def nat_to_l1 (n : Nat) : 𝔹* :=
@@ -31,28 +33,37 @@ def l1_to_nat : 𝔹* → Nat
 | false :: x' => 2 * (l1_to_nat x')
 | true :: x' => 2 * (l1_to_nat x') + 1
 
+/--
+  0-based big-endian encoding with implicit 1.
+  See theorem `nat_to_b0_is_canonical_bijection` for proof of equivalence to the book's
+  canonical bijection from 𝔹* to ℕ₀.  The advantage of starting with this definition instead
+  of the book's definition for our proofs is that this definition (or more precisely,
+  nat_to_l1) is recursive and thus lends itself simply to induction.
+-/
 @[grind, simp, aesop safe]
-def nat_to_b0 (n : Nat) : 𝔹* :=
-  -- 0-based big-endian encoding with implicit 1.
-  -- See theorem `nat_to_b0_is_canonical_bijection` for proof of equivalence to the book's
-    -- canonical bijection from 𝔹* to ℕ₀.  The advantage of starting with this definition instead
-    -- of the book's definition for our proofs is that this definition (or more precisely,
-    -- nat_to_l1) is recursive and thus lends itself simply to induction.
+def Nat.to_b0 (n : Nat) : 𝔹* :=
   List.reverse (nat_to_l1 (n + 1))
 
+notation "⌜" n "⌝" => Nat.to_b0 n
+
+/--
+  0-based big-endian decoding with implicit 1.
+  See theorem `nat_to_b0_is_canonical_bijection_inverse` for proof of equivalence to the book's
+  canonical bijection inverse from 𝔹* to ℕ₀.
+-/
 @[grind, simp, aesop safe]
-def b0_to_nat (x : 𝔹*) : Nat :=
-  -- 0-based big-endian decoding with implicit 1.
-  -- See theorem `nat_to_b0_is_canonical_bijection_inverse` for proof of equivalence to the book's
-    -- canonical bijection inverse from 𝔹* to ℕ₀.
+def BinStr.to_nat (x : 𝔹*) : Nat :=
   l1_to_nat (List.reverse x) - 1
 
+notation "⌜" n "⌝⁻¹" => BinStr.to_nat n
 
----- Proving Bijection ----
+-------------------------------------------------------------------------------
+-- Proving that our function is a Binjection
+-------------------------------------------------------------------------------
 
 @[grind ., aesop safe]
 lemma l1_to_nat_ne_0 : l1_to_nat x ≠ 0 := by
-  induction x <;> grind [l1_to_nat.eq_def]
+  induction x <;> grind only [l1_to_nat.eq_def]
 
 @[grind =, simp, aesop unsafe]
 lemma nat_to_l1_to_nat (n : Nat) (h : n ≠ 0) : l1_to_nat (nat_to_l1 n) = n := by
@@ -76,75 +87,74 @@ lemma l1_to_nat_to_l1 : nat_to_l1 (l1_to_nat x) = x := by
     · rw [nat_to_l1.eq_def]
       grind only [l1_to_nat_ne_0, l1_to_nat, #c4c9, #dac0, #9f1a]
 
+/--
+0-based big-endian decoding is left-inverse of respective encoding.
+This, together with `b0_to_nat_to_b0`, `nat_to_b0_is_canonical_bijection`, and
+`nat_to_b0_is_canonical_bijection_inverse`, show that the canonical bijection is really a
+bijection and that the canonical bijection inverse is really its inverse (part of Propositions
+2.1.1 and 2.1.2).
+-/
 @[grind =, simp, aesop safe]
-theorem nat_to_b0_to_nat : b0_to_nat (nat_to_b0 n) = n := by
-  -- 0-based big-endian decoding is left-inverse of respective encoding.
-  -- This, together with `b0_to_nat_to_b0`, `nat_to_b0_is_canonical_bijection`, and
-  -- `nat_to_b0_is_canonical_bijection_inverse`, show that the canonical bijection is really a
-  -- bijection and that the canonical bijection inverse is really its inverse (part of Propositions
-  -- 2.1.1 and 2.1.2).
-  simp [nat_to_l1_to_nat]
+theorem nat_to_b0_to_nat : ⌜⌜n⌝⌝⁻¹ = n := by
+  simp only [BinStr.to_nat, Nat.to_b0, List.reverse_reverse, ne_eq,
+    Nat.add_eq_zero_iff, one_ne_zero, and_false, not_false_eq_true,
+    nat_to_l1_to_nat, add_tsub_cancel_right]
 
+/--
+0-based big-endian decoding is right-inverse of respective encoding.
+-/
 @[grind =, simp, aesop safe]
-theorem b0_to_nat_to_b0 : nat_to_b0 (b0_to_nat x) = x := by
-  -- 0-based big-endian decoding is right-inverse of respective encoding.
-  grind [l1_to_nat_to_l1]
+theorem b0_to_nat_to_b0 : ⌜⌜x⌝⁻¹⌝ = x := by
+  grind only [Nat.to_b0, BinStr.to_nat, l1_to_nat_ne_0,
+    = l1_to_nat_to_l1, = List.reverse_reverse, #8f44]
 
+theorem nat_to_b0_injective : Function.Injective Nat.to_b0 :=
+  Function.injective_iff_hasLeftInverse.mpr ⟨BinStr.to_nat, nat_to_b0_to_nat⟩
 
-theorem b0_to_nat_bijective : Function.Bijective b0_to_nat := by
-  apply Function.bijective_iff_has_inverse.mpr
-  use nat_to_b0
-  constructor
-  · simp only [Function.LeftInverse]
-    exact b0_to_nat_to_b0
-  · simp only [Function.RightInverse]
-    exact nat_to_b0_to_nat
+theorem b0_to_nat_surjective : Function.Surjective BinStr.to_nat :=
+  Function.surjective_iff_hasRightInverse.mpr ⟨Nat.to_b0, nat_to_b0_to_nat⟩
 
-theorem nat_to_b0_bijective : Function.Bijective nat_to_b0 := by
-  apply Function.bijective_iff_has_inverse.mpr
-  use b0_to_nat
-  constructor
-  · simp only [Function.LeftInverse]
-    exact nat_to_b0_to_nat
-  · simp only [Function.RightInverse]
-    exact b0_to_nat_to_b0
+theorem b0_to_nat_injective : Function.Injective BinStr.to_nat :=
+  Function.injective_iff_hasLeftInverse.mpr ⟨Nat.to_b0, b0_to_nat_to_b0⟩
 
----- Defining Encoded Length ----
+theorem nat_to_b0_surjective : Function.Surjective Nat.to_b0 :=
+  Function.surjective_iff_hasRightInverse.mpr ⟨BinStr.to_nat, b0_to_nat_to_b0⟩
 
-@[grind, simp, aesop safe]
-def nat_l1_length (n : Nat) : Nat :=
-  List.length (nat_to_l1 n)
+theorem nat_to_b0_bijective : Function.Bijective Nat.to_b0 :=
+  ⟨nat_to_b0_injective, nat_to_b0_surjective⟩
 
-@[grind, simp, aesop safe]
-def nat_b0_length (n : Nat) : Nat :=
-  List.length (nat_to_b0 n)
+theorem b0_to_nat_bijective : Function.Bijective BinStr.to_nat :=
+  ⟨b0_to_nat_injective, b0_to_nat_surjective⟩
 
----- Proving Length Formulae ----
+-------------------------------------------------------------------------------
+-- Proving length of encodings
+-------------------------------------------------------------------------------
 
 @[grind =, simp, aesop unsafe]
-lemma nat_l1_length_formula (n : Nat) (h : n ≠ 0) : nat_l1_length n = Nat.log2 n := by
+lemma nat_l1_length_formula (n : Nat) (h : n ≠ 0) : ℓ (nat_to_l1 n) = n.log2 := by
   -- Formula for length of the 1-based little-endian encoding of a number.
   match mh1: n with
-  | 0 => simp [nat_to_l1]
-  | 1 => simp [Nat.log2_def, nat_to_l1]
+  | 0 => simp only [nat_to_l1, List.length_nil, Nat.log2_zero]
+  | 1 => simp only [nat_to_l1, List.length_nil, Nat.log2_def,
+    Nat.not_ofNat_le_one, ↓reduceIte]
   | n'' + 2 =>
     have r1 := nat_l1_length_formula (n / 2)
-    rw [nat_l1_length]
     match mh2: n'' % 2 with
-    | 0 =>
-      grind [Nat.log2_def]
-    | _ =>
-      grind [Nat.log2_def]
+    | 0 => grind only [nat_to_l1, Nat.log2_def, = List.length_cons, #4565, #c576]
+    | _ => grind only [nat_to_l1, Nat.log2_def, = List.length_cons, #4565, #c576]
 
 @[grind =, simp, aesop safe]
-theorem nat_b0_length_formula (n : Nat) : nat_b0_length n = Nat.log2 (n + 1) := by
+theorem nat_b0_length_formula (n : Nat) : ℓ ⌜n⌝ = (n + 1).log2 := by
   -- Formula for the length of the 0-based big-endian encoding of a number.
     -- Arguably part of proposition 2.1.1.
   rw [← nat_l1_length_formula _ (by simp)]
-  simp
+  simp only [Nat.to_b0, List.length_reverse, ne_eq, Nat.add_eq_zero_iff,
+    one_ne_zero, and_false, not_false_eq_true, nat_l1_length_formula]
 
 
----- Proving Equivalence with Book Definition ----
+-------------------------------------------------------------------------------
+-- Soundness and Completeness of our Bijection WRT textbook's Bijection
+-------------------------------------------------------------------------------
 
 lemma l1_indexing_formula_helper (x : 𝔹*) (idx : Fin x.length) :
     (x[idx] = (l1_to_nat x / 2^idx.val % 2 == 1)) := by
@@ -168,7 +178,7 @@ lemma l1_indexing_formula_helper (x : 𝔹*) (idx : Fin x.length) :
       grind [Nat.div_div_eq_div_mul]
 
 lemma l1_indexing_formula (n : Nat) (idx : Fin (nat_to_l1 n).length) :
-    ((nat_to_l1 n)[idx] = (n / 2^idx.val % 2 == 1)) := by
+((nat_to_l1 n)[idx] = (n / 2^idx.val % 2 == 1)) := by
   -- Formula for the bit at an index of the 1-based little-endian encoding of a number.
   have s1 := l1_indexing_formula_helper (nat_to_l1 n) idx
   rw [nat_to_l1_to_nat _ (by grind)] at s1
@@ -178,36 +188,32 @@ lemma l1_indexing_formula (n : Nat) (idx : Fin (nat_to_l1 n).length) :
 def snoc {α : Type u} (ls : List α) (el : α) : List α :=
   ls ++ [el]
 
+/--
+Formula for the value that a binary string represents when interpreted as 1-based
+little-endian.
+-/
 lemma l1_value_formula (x : List Bool) :
-    l1_to_nat x = ∑ i : Fin (x.length + 1), (snoc x true)[i].toNat * 2 ^ i.val := by
-  -- Formula for the value that a binary string represents when interpreted as 1-based
-    -- little-endian.
+l1_to_nat x = ∑ i : Fin (x.length + 1), (snoc x true)[i].toNat * 2 ^ i.val := by
   induction x with
   | nil =>
     simp [l1_to_nat, snoc]
   | cons a x' ih =>
-
-    simp only [snoc]
-
-    simp only [List.cons_append]
-    simp only [Fin.sum_univ_succ]
-
-    have h_factor : ∑ i : Fin (x'.length + 1), (x' ++ [true])[i].toNat * 2 ^ (i.val + 1) =
-                       2 * ∑ i : Fin (x'.length + 1), (x' ++ [true])[i].toNat * 2 ^ i.val := by
+    simp only [snoc, List.cons_append, Fin.sum_univ_succ]
+    have h_factor :
+      ∑ i : Fin (ℓ x' + 1), (x' ++ [true])[i].toNat * 2 ^ (i.val + 1) =
+      2 * ∑ i : Fin (ℓ x' + 1), (x' ++ [true])[i].toNat * 2 ^ i.val := by
       rw [Finset.mul_sum]
+      grind only
+    suffices l1_to_nat (a :: x') = a.toNat + 2 * l1_to_nat x' by
       grind
-
-    suffices l1_to_nat (a :: x') = a.toNat + 2 * l1_to_nat x' by grind
-
     cases a <;> simp [l1_to_nat, Bool.toNat]; omega
 
-
-lemma b0_indexing_formula_lemma (x : 𝔹*) (idx : Fin x.length) :
-    (x[idx] = ((b0_to_nat x + 1) / 2^(x.length - 1 - idx.val) % 2 == 1)) := by
-
-  -- Formula for the bit at an index of the 0-based big-endian encoding of a number.
-
-  rw [b0_to_nat]
+/--
+Formula for the bit at an index of the 0-based big-endian encoding of a number.
+-/
+lemma b0_indexing_formula_lemma (x : 𝔹*) (idx : Fin ℓ x) :
+    (x[idx] = ((⌜x⌝⁻¹ + 1) / 2^(ℓ x - 1 - idx.val) % 2 == 1)) := by
+  rw [BinStr.to_nat]
 
   have s1 : (l1_to_nat x.reverse) ≠ 0 := by
     induction x.reverse <;> simp [l1_to_nat_ne_0]
@@ -222,31 +228,34 @@ lemma b0_indexing_formula_lemma (x : 𝔹*) (idx : Fin x.length) :
 
   simp_all
 
-
-lemma b0_indexing_formula (n : Nat) (idx : Fin (nat_to_b0 n).length) :
-    (nat_to_b0 n)[idx] = ((n + 1) / 2^((nat_to_b0 n).length - 1 - idx.val) % 2 == 1) := by
-  -- Formula for the bit at an index of the 1-based little-endian encoding of a number.
-  have s1 := b0_indexing_formula_lemma (nat_to_b0 n) idx
-
+/--
+Formula for the bit at an index of the 1-based little-endian encoding of a number.
+-/
+lemma b0_indexing_formula (n : Nat) (idx : Fin ℓ⌜n⌝) :
+(⌜n⌝[idx] = ((n + 1) / 2^((ℓ⌜n⌝ - 1 - idx.val)) % 2 == 1)) := by
+  have s1 := b0_indexing_formula_lemma ⌜n⌝ idx
   rw [nat_to_b0_to_nat _] at s1
   exact s1
 
+/--
+0-based big-endian encoding *without* implicit 1, defined in accordance with the book.
+While the book writes (n + 1) instead of n when defining l, it is clear from the context
+that the n there refers to the n from the canonical bijection formula rather than the n
+from the defininition of B.
+-/
 def B (n : Nat) : 𝔹* :=
-  -- 0-based big-endian encoding *without* implicit 1, defined in accordance with the book.
   let l := Nat.log2 n + 1
-  List.map (λ i => (n / 2 ^ (l - i)) % 2 == 1) (List.range' 1 l)
-    -- While the book writes (n + 1) instead of n when defining l, it is clear from the context
-    -- that the n there refers to the n from the canonical bijection formula rather than the n
-    -- from the defininition of B.
+  (List.range' 1 l).map (λ i => (n / 2 ^ (l - i)) % 2 == 1)
 
+/--
+Formula for the bit at an index of the 0-based big-endian encoding (with implicit 1) of
+a number.
+-/
 lemma b0_value_formula :
-    b0_to_nat x = (∑ i : Fin (x.length + 1), (true :: x)[i].toNat * 2 ^ (x.length - i)) - 1 := by
-  -- Formula for the bit at an index of the 0-based big-endian encoding (with implicit 1) of
-    -- a number.
-  rw [b0_to_nat]
+BinStr.to_nat x = (∑ i : Fin (ℓ x + 1), (true :: x)[i].toNat * 2 ^ (ℓ x - i)) - 1 := by
+  rw [BinStr.to_nat]
   congr 1
   rw [l1_value_formula]
-
   refine Finset.sum_bij (fun i _ => ⟨x.length - i.val, ?_⟩) ?_ ?_ ?_ ?_
   · simp only [Order.lt_add_one_iff, tsub_le_iff_right, le_add_iff_nonneg_right, zero_le]
   · simp only [Finset.mem_univ, imp_self, implies_true]
@@ -267,90 +276,79 @@ lemma b0_value_formula :
     · instantiate only [= List.getElem_cons]
       cases #9d38
 
--- Soundness and completeness of of our canconical bijection
--- With the textbook version, proposition 2.1.1
-theorem nat_to_b0_is_canonical_bijection : nat_to_b0 n = (B (n + 1)).tail := by
-  -- The 0-based big-endian encoding `nat_to_b0` is, in fact, the canonical bijection from ℕ → 𝔹*
-    -- defined in the book in Proposition 2.1.1.
-  let a1 := nat_to_b0 n
+/--
+The 0-based big-endian encoding is, in fact, the canonical bijection from ℕ → 𝔹*
+defined in the book in Proposition 2.1.1.
+-/
+theorem nat_to_b0_is_canonical_bijection :
+Nat.to_b0 n = (B (n + 1)).tail := by
+  let a1 := Nat.to_b0 n
   let a2 := (B (n + 1)).tail
   have h_length_eq: a1.length = a2.length := by
     have s1 : a1.length = (n + 1).log2 := by
       unfold a1
-      rw [← nat_b0_length]
       exact nat_b0_length_formula n
     suffices a2.length = (n + 1).log2 by
       rw [s1, this]
     unfold a2
-    rw [List.length_tail]
-    rw [B]
-    rw [List.length_map]
-    simp
+    rw [List.length_tail, B, List.length_map, List.length_range']
+    simp only [add_tsub_cancel_right]
   suffices ∀ i : Fin (a1.length), a1[i] = a2[i] by
     refine List.ext_get h_length_eq ?_
     intro i h_1 h_2
     have thing := this ⟨i, by grind⟩
-    grind
+    grind only [= Fin.getElem_fin, = List.get_eq_getElem]
   intro i
   unfold a1
-  rw [b0_indexing_formula_lemma]
-  rw [nat_to_b0_to_nat]
-  have : List.length (nat_to_b0 n) = nat_b0_length n := by
-    rw [← nat_b0_length]
-  suffices ((n + 1) / 2 ^ (nat_b0_length n - 1 - ↑i) % 2 == 1) = a2[i] by
-    -- this `suffices` is needed instead of a direct `rw` due to motive issues
-    rw [nat_b0_length] at this
+  rw [b0_indexing_formula_lemma, nat_to_b0_to_nat]
+  suffices ((n + 1) / 2 ^ (ℓ ⌜n⌝ - 1 - ↑i) % 2 == 1) = a2[i] by
     exact this
-  rw [nat_b0_length_formula]
   unfold a2
   unfold B
-  grind
+  grind only [= nat_b0_length_formula, = List.length_tail, = Lean.Grind.toInt_fin,
+    = Fin.getElem_fin, = List.length_map, = List.length_range', = List.getElem_tail,
+    = List.getElem_map, = List.getElem_range', #6cf9, #6271, #0e47]
 
 -- Soundness and completeness of of our canconical bijection
 -- With the textbook version, proposition 2.1.1
 theorem b0_to_nat_is_canonical_bijection_inverse :
-    b0_to_nat x = (∑ i : Fin (x.length + 1), (true :: x)[i].toNat * 2 ^ (x.length - i)) - 1 := by
+BinStr.to_nat x = (∑ i : Fin (ℓ x + 1), (true :: x)[i].toNat * 2 ^ (ℓ x - i)) - 1 := by
   -- The 0-based big-endian decoding `b0_to_nat` is, in fact, the canonical bijection inverse from
     -- ℕ → 𝔹* defined in the book by Proposition 2.1.2.
   exact b0_value_formula x
 
-lemma l1_length_bound (x : 𝔹*) :
-    2^x.length ≤ l1_to_nat x ∧ l1_to_nat x ≤ 2^(x.length + 1) - 1 := by
-  -- Bounds, in terms of the string's length, on the value of a number represented by a binary
-    -- string interpreted in 1-based little-endian.
-  let n := l1_to_nat x
-  suffices  2^(nat_to_l1 n).length ≤ l1_to_nat (nat_to_l1 n) ∧
-    l1_to_nat (nat_to_l1 n) ≤ 2^((nat_to_l1 n).length + 1) - 1 by grind only [= l1_to_nat_to_l1]
+-------------------------------------------------------------------------------
+-- Length Bounds
+-------------------------------------------------------------------------------
 
-  rw [← nat_l1_length]
+lemma l1_length_bound (x : 𝔹*) :
+2^(ℓ x) ≤ l1_to_nat x ∧ l1_to_nat x ≤ 2^(ℓ x + 1) - 1 := by
+  let n := l1_to_nat x
+  suffices 2^(ℓ (nat_to_l1 n)) ≤ l1_to_nat (nat_to_l1 n) ∧
+  l1_to_nat (nat_to_l1 n) ≤ 2^((ℓ (nat_to_l1 n)) + 1) - 1 by
+    grind only [= l1_to_nat_to_l1]
   rw [nat_l1_length_formula _ (by grind)]
   have n_ne_0 : n ≠ 0 := by exact l1_to_nat_ne_0 _
   rw [nat_to_l1_to_nat _ n_ne_0]
-
-  have : 2 ^ n.log2 ≤ n := by simp only [Nat.log2_eq_log_two, Nat.pow_log_le_self 2 n_ne_0]
-
+  have : 2 ^ n.log2 ≤ n := by
+    simp only [Nat.log2_eq_log_two, Nat.pow_log_le_self 2 n_ne_0]
   refine ⟨this, ?_⟩
-
-  rw [Nat.log2_eq_log_two]
-  rw [← Nat.succ_eq_add_one]
-
-  suffices n < 2 ^ (Nat.log 2 n).succ by grind only [usr Nat.pow_pos]
+  rw [Nat.log2_eq_log_two, ← Nat.succ_eq_add_one]
+  suffices n < 2 ^ (Nat.log 2 n).succ by
+    grind only [usr Nat.pow_pos]
   exact Nat.lt_pow_succ_log_self (by simp) n
 
 /--
-Propotion 2.1.3: Bijection Length Bound.
+Bounds, in terms of the string's length, on the value of a number
+encoded through the canonical bijection. Proposition 2.1.3.
 -/
 theorem b0_length_bound (x : 𝔹*) :
-    2^x.length - 1 ≤ b0_to_nat x ∧ b0_to_nat x ≤ 2^(x.length + 1) - 2 := by
-  -- Bounds, in terms of the string's length, on the value of a number encoded through the
-    -- canonical bijection.
-  -- Proposition 2.1.3.
-  rw [b0_to_nat]
-  rw [← List.length_reverse]
-  grind [l1_length_bound]
+2^(ℓ x) - 1 ≤ ⌜x⌝⁻¹ ∧ ⌜x⌝⁻¹ ≤ 2^(ℓ x + 1) - 2 := by
+  rw [BinStr.to_nat, ←List.length_reverse]
+  grind only [!l1_length_bound, usr Nat.pow_pos]
 
-theorem b0_length_upper : b0_to_nat x ≤ 2^(x.length + 1) - 2 := by
+lemma b0_length_upper : ⌜x⌝⁻¹ ≤ 2^(ℓ x + 1) - 2 := by
   exact (b0_length_bound x).2
 
-theorem b0_length_lower : 2^x.length - 1 ≤ b0_to_nat x := by
+lemma b0_length_lower : 2^(ℓ x) - 1 ≤ ⌜x⌝⁻¹ := by
   exact (b0_length_bound x).1

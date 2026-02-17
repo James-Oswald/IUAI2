@@ -12,6 +12,9 @@ def BinStr.toString (s : BinStr) : String :=
 instance : ToString BinStr where
   toString := BinStr.toString
 
+-- Length of a binary string
+prefix:max "ℓ" => List.length
+
 /--
 The type of Binary strings of a fixed length n.
 -/
