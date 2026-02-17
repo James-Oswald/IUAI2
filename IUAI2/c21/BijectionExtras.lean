@@ -1,4 +1,5 @@
-import mathlib
+
+import Mathlib
 import IUAI2.c21.Bijection
 import IUAI2.c21.BinStr
 
@@ -9,13 +10,13 @@ variable (n m l : Nat)
 -- Setup and Proof of Length-Lexicographicality of Canonical Bijection ----
 
 @[grind, aesop safe]
-def l1_succ (x : 𝔹*) :=
+def l1_succ (x : 𝔹*) : 𝔹* :=
   match x with
   | [] => [false]
   | false :: x' => true :: x'
   | true :: x' => false :: l1_succ x'
 
-@[grind, simp, aesop safe]
+@[grind =, simp, aesop safe]
 lemma l1_to_nat_preserves_succ : l1_to_nat (l1_succ x) = (l1_to_nat x).succ := by
   induction x with
   | nil => simp [l1_to_nat, l1_succ]
@@ -159,13 +160,12 @@ lemma llex_colex_reverse_same_length :
       rw [lcolex_compareTo_append_same_length _ _]
       simp
       cases a <;> cases b <;> simp [ih_applied]
-      grind
+      grind only
 
-@[grind, aesop unsafe]
+@[grind =, aesop unsafe]
 lemma llex_colex_reverse :
-    llex x y = lcolex x.reverse y.reverse := by
-  grind
-
+llex x y = lcolex x.reverse y.reverse := by
+  grind only [= llex_colex_reverse_same_length, = llex_colex_reverse_diff_length]
 
 lemma nat_to_l1_is_length_colexicographical_when_diff_length :
     n ≠ 0 ∧ m ≠ 0 ∧ n < m ∧ (nat_to_l1 n).length ≠ (nat_to_l1 m).length →
@@ -174,10 +174,8 @@ lemma nat_to_l1_is_length_colexicographical_when_diff_length :
   rw [lcolex]
   rw [lcolex_compareTo_diff_length _ _ hlen_ne]
   have hn_len : (nat_to_l1 n).length = Nat.log2 n := by
-    rw [← nat_l1_length]
     exact nat_l1_length_formula n hn_ne_0
   have hm_len : (nat_to_l1 m).length = Nat.log2 m := by
-    rw [← nat_l1_length]
     exact nat_l1_length_formula m hm_ne_0
   rw [hn_len, hm_len]
   have hlog_le : Nat.log2 n ≤ Nat.log2 m := by
@@ -318,10 +316,10 @@ lemma nat_to_l1_is_length_colexicographical_when_same_length :
       · have hn_succ_lt_m : n.succ < m := by omega
         have hn_succ_ne_0 : n.succ ≠ 0 := by omega
         have hlen_n_succ : (nat_to_l1 n.succ).length = (nat_to_l1 m).length := by
-          rw [← nat_l1_length, nat_l1_length_formula n hn_ne_0] at hlen_eq
-          rw [← nat_l1_length, nat_l1_length_formula m (by omega)] at hlen_eq
-          rw [← nat_l1_length, nat_l1_length_formula n.succ hn_succ_ne_0]
-          rw [← nat_l1_length, nat_l1_length_formula m (by omega)]
+          rw [nat_l1_length_formula n hn_ne_0] at hlen_eq
+          rw [nat_l1_length_formula m (by omega)] at hlen_eq
+          rw [nat_l1_length_formula n.succ hn_succ_ne_0]
+          rw [nat_l1_length_formula m (by omega)]
           have h1 : Nat.log2 n ≤ Nat.log2 n.succ := by
             rw [Nat.log2_eq_log_two, Nat.log2_eq_log_two]
             exact Nat.log_mono_right (Nat.le_succ n)
@@ -343,12 +341,12 @@ lemma nat_to_l1_is_length_colexicographical :
     nat_to_l1_is_length_colexicographical_when_diff_length]
 
 @[grind =, aesop unsafe]
-theorem nat_to_b0_is_length_lexicographical : n < m → llex (nat_to_b0 n) (nat_to_b0 m) := by
+theorem nat_to_b0_is_length_lexicographical : n < m → llex ⌜n⌝ ⌜m⌝ := by
   -- The canonical bijection from ℕ to 𝔹* orders the binary strings length-lexicographically.
   -- Part of Proposition 2.1.1.
   grind
 
-@[grind, aesop safe]
+@[grind ., aesop safe]
 theorem lcolex_is_irreflexive : ¬ lcolex x x := by
   intro h1
   induction x with
@@ -364,7 +362,7 @@ theorem lcolex_is_irreflexive : ¬ lcolex x x := by
     have s1 : length_colex_compareTo x' x' ≠ 0 := by aesop
     simp_all
 
-@[grind, aesop safe]
+@[grind ., aesop safe]
 lemma nat_to_l1_is_length_colexicographical_backwards_contrapositive :
     n ≠ 0 → ¬ n < m → ¬ lcolex (nat_to_l1 n) (nat_to_l1 m) := by
   intro h1 h2 h3
@@ -379,31 +377,33 @@ lemma nat_to_l1_is_length_colexicographical_backwards_contrapositive :
     have s4 : lcolex (nat_to_l1 n) (nat_to_l1 n) = true := by grind
     grind
 
-@[grind, aesop safe]
+@[grind ., aesop safe]
 lemma nat_to_l1_is_length_colexicographical_backwards :
     n ≠ 0 → lcolex (nat_to_l1 n) (nat_to_l1 m) → n < m := by
-  grind
+  grind only [nat_to_l1_is_length_colexicographical_backwards_contrapositive]
 
-@[grind]
+@[grind =]
 lemma nat_to_l1_is_length_colexicographical_iff :
-    n ≠ 0 → (n < m ↔ lcolex (nat_to_l1 n) (nat_to_l1 m)) := by
-  grind
+n ≠ 0 → (n < m ↔ lcolex (nat_to_l1 n) (nat_to_l1 m)) := by
+  grind only [nat_to_l1_is_length_colexicographical_backwards,
+    = nat_to_l1_is_length_colexicographical, #b5235b60883b4cfc]
 
-@[grind]
+-- A stronger formalization of the claim that the canonical bijection from ℕ to 𝔹* orders the
+-- binary strings length-lexicographically.
+-- Part of Proposition 2.1.1.
+@[grind =]
 lemma nat_to_b0_is_length_lexicographical_iff :
-    n < m ↔ llex (nat_to_b0 n) (nat_to_b0 m) := by
-  -- A stronger formalization of the claim that the canonical bijection from ℕ to 𝔹* orders the
-  -- binary strings length-lexicographically.  Part of Proposition 2.1.1.
+    n < m ↔ llex ⌜n⌝ ⌜m⌝ := by
   constructor
-  · grind
+  · grind only [= nat_to_b0_is_length_lexicographical]
   · intro h
     have s1 : n + 1 ≠ 0 := by grind
     have s2 := (nat_to_l1_is_length_colexicographical_iff (n + 1) (m + 1) s1).2
-    grind
+    grind only [= llex_colex_reverse, = Nat.to_b0.eq_1, = List.reverse_reverse]
 
 
 lemma same_length_llex_iff_lex (x y : 𝔹*) (h : x.length = y.length) :
-    same_length_lex x y = true ↔ List.Lex (· < ·) x y := by
+same_length_lex x y = true ↔ List.Lex (· < ·) x y := by
   induction x generalizing y with
   | nil =>
     cases y <;> simp [same_length_lex] at h ⊢
@@ -432,9 +432,9 @@ lemma same_length_llex_iff_lex (x y : 𝔹*) (h : x.length = y.length) :
               contradiction
             · simp at h_rel
 
+-- llex is (a computational) equivalent to List.Shortlex.
 theorem length_llex_iff_shortlex (x y : 𝔹*) :
-    llex x y = true ↔ List.Shortlex (· < ·) x y := by
-  -- llex is (a computational) equivalent to List.Shortlex.
+llex x y = true ↔ List.Shortlex (· < ·) x y := by
   unfold llex List.Shortlex InvImage
   grind [same_length_llex_iff_lex]
 
@@ -445,8 +445,9 @@ def b0_succ (x : 𝔹*) :=
   (l1_succ x.reverse).reverse
 
 @[grind =, simp, aesop safe]
-lemma b0_to_nat_preserves_succ : b0_to_nat (b0_succ x) = (b0_to_nat x).succ := by
-  grind
+lemma b0_to_nat_preserves_succ : ⌜b0_succ x⌝⁻¹ = (⌜x⌝⁻¹) + 1 := by
+  grind only [= BinStr.to_nat.eq_1, b0_succ, l1_to_nat_ne_0,
+   = List.reverse_reverse, = l1_to_nat_preserves_succ, #0c77, #8f44]
 
 @[grind =, aesop safe]
 def l1_pred (x : 𝔹*) :=
@@ -512,5 +513,7 @@ lemma l1_to_nat_preserves_pred : x ≠ [] → l1_to_nat (l1_pred x) = (l1_to_nat
   exact s1
 
 @[grind =, simp, aesop unsafe]
-lemma b0_to_nat_preserves_pred : x ≠ [] → b0_to_nat (b0_pred x) = (b0_to_nat x).pred := by
-  simp_all
+lemma b0_to_nat_preserves_pred : x ≠ [] → ⌜b0_pred x⌝⁻¹ = (⌜x⌝⁻¹) - 1 := by
+  simp_all only [ne_eq, BinStr.to_nat, b0_pred, List.reverse_reverse,
+    List.reverse_eq_nil_iff, not_false_eq_true, l1_to_nat_preserves_pred,
+    Nat.pred_eq_sub_one, implies_true]

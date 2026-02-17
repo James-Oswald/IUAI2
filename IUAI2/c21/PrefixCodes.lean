@@ -15,7 +15,9 @@ notation:80 l:81 " ^ " n:80 => List.flatten (List.replicate n l)
 @[simp]
 lemma list_pow_eq_replicate {α : Type*} (n : ℕ) (a : α)
 : [a] ^ n = List.replicate n a := by
-  induction n <;> grind
+  induction n
+  · case zero => grind only [List.replicate_zero, List.flatten_nil]
+  · case succ => grind only [= List.replicate_succ, = List.flatten_cons, = List.cons_append]
 
 lemma list_pow_add {α : Type*} (l1 : List α) (m n : ℕ) :
 l1 ^ (m + n) = l1 ^ m ++ l1 ^ n := by
