@@ -321,18 +321,20 @@ theorem length_E_2 (x : 𝔹*) : ℓ (E 2 x) = ℓ x + 2 * (ℓ x + 1).log2 + 1 
 /--
 Part of proposition 2.1.5 from the book
 -/
-theorem length_E_2_leplus : (λ x => ℓ (E 2 x)) ≤⁺ (λ x => ℓ x + 2 * (ℓ x).log2) := by
-  suffices ∃ k : ℕ, ∀ x : 𝔹*, ℓ (E 2 x) ≤ ℓ x + 2 * (ℓ x).log2 + k by rw [leplus_nat_codomain]; exact this
+theorem length_E_2_eqplus : (λ x => ℓ (E 2 x)) =⁺ (λ x => ℓ x + 2 * (ℓ x).log2) := by
+  suffices ∃ k : ℕ, ∀ x : 𝔹*, |(ℓ (E 2 x) : ℤ) - (ℓ x + 2 * (ℓ x).log2 : ℤ)| ≤ k by rw [eqplus_nat_codomain]; exact this
   use 4
   intro x
-  show ℓ (E 2 x) ≤ ℓ x + 2 * (ℓ x).log2 + 4
-  suffices ℓ x + 2 * (ℓ x + 1).log2 + 1 ≤ ℓ x + 2 * (ℓ x).log2 + 4 by rw [length_E_2]; exact this
-  suffices (ℓ x + 1).log2 ≤ (ℓ x).log2 + 1 by linarith
+  show |(ℓ (E 2 x) : ℤ) - (ℓ x + 2 * (ℓ x).log2 : ℤ)| ≤ 4
+  suffices |(ℓ x + 2 * (ℓ x + 1).log2 + 1 : ℤ) - (ℓ x + 2 * (ℓ x).log2 : ℤ)| ≤ 4 by rw [length_E_2]; exact this
+  suffices |((ℓ x + 1).log2 : ℤ) -  ((ℓ x).log2 : ℤ)| ≤ 1 by grind only [= abs.eq_1, !log2_le_log2_succ, !log2_add_le_log2, !→ log2_add_le_log2, = max_def]
   match mh: (ℓ x) with
-  | 0 => grind only [log2_one, log2_zero]
+  | 0 => grind only [= abs.eq_1, = log2_one, = log2_zero]
   | l' + 1 =>
-    suffices ((ℓ x) + 1).log2 ≤ (ℓ x).log2 + 1 by grind only
-    grind only [log2_of_plus_le_log2]
+    suffices (ℓ x).log2 ≤ ((ℓ x) + 1).log2 ∧ ((ℓ x) + 1).log2 ≤ (ℓ x).log2 + 1 by
+      simp only [abs.eq_1, max_def]
+      grind only
+    grind only [!log2_le_log2_succ, !log2_add_le_log2]
 
 /--
 Lemma 2.1.6 from the book
