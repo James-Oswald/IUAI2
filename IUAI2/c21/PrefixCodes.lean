@@ -4,6 +4,8 @@
 import Mathlib
 import IUAI2.c21.BinStr
 import IUAI2.c21.Bijection
+import IUAI2.c21.LogLemmas
+import IUAI2.c21.Asymptotics
 
 -------------------------------------------------------------------------------
 -- List Powers
@@ -295,6 +297,45 @@ PrefixCode (E (i + 1)) := by
         grind only [prefix_incomparable_append]
       have : E (i + 1) x ⋢ E (i + 1) y := by grind only
       exact this
+
+
+/--
+Part of proposition 2.1.5 from the book
+-/
+theorem length_E_1 (x : 𝔹*) : ℓ (E 1 x) = 2 * ℓ x + 1 := by
+  simp only [E, BinStr.to_nat, Nat.to_b0, List.reverse_reverse, ne_eq, Nat.add_eq_zero_iff,
+    List.length_eq_zero_iff, one_ne_zero, and_false, not_false_eq_true, nat_to_l1_to_nat, add_tsub_cancel_right,
+    List.flatten_replicate_singleton, List.append_assoc, List.cons_append, List.nil_append, List.length_append,
+    List.length_replicate, List.length_cons]
+  omega
+
+/--
+Part of proposition 2.1.5 from the book
+-/
+theorem length_E_2 (x : 𝔹*) : ℓ (E 2 x) = ℓ x + 2 * (ℓ x + 1).log2 + 1 := by
+  simp only [E, BinStr.to_nat, Nat.to_b0, List.length_reverse, ne_eq, Nat.add_eq_zero_iff, List.length_eq_zero_iff,
+    one_ne_zero, and_false, not_false_eq_true, nat_l1_length_formula, List.reverse_reverse, nat_to_l1_to_nat,
+    add_tsub_cancel_right, List.flatten_replicate_singleton, List.append_assoc, List.cons_append, List.nil_append,
+    List.length_append, List.length_replicate, List.length_cons]
+  omega
+
+/--
+Part of proposition 2.1.5 from the book
+-/
+theorem length_E_2_eqplus : (λ x => ℓ (E 2 x)) =⁺ (λ x => ℓ x + 2 * (ℓ x).log2) := by
+  suffices ∃ k : ℕ, ∀ x : 𝔹*, |(ℓ (E 2 x) : ℤ) - (ℓ x + 2 * (ℓ x).log2 : ℤ)| ≤ k by rw [eqplus_nat_codomain]; exact this
+  use 4
+  intro x
+  show |(ℓ (E 2 x) : ℤ) - (ℓ x + 2 * (ℓ x).log2 : ℤ)| ≤ 4
+  suffices |(ℓ x + 2 * (ℓ x + 1).log2 + 1 : ℤ) - (ℓ x + 2 * (ℓ x).log2 : ℤ)| ≤ 4 by rw [length_E_2]; exact this
+  suffices |((ℓ x + 1).log2 : ℤ) -  ((ℓ x).log2 : ℤ)| ≤ 1 by grind only [= abs.eq_1, !log2_le_log2_succ, !log2_add_le_log2, !→ log2_add_le_log2, = max_def]
+  match mh: (ℓ x) with
+  | 0 => grind only [= abs.eq_1, = log2_one, = log2_zero]
+  | l' + 1 =>
+    suffices (ℓ x).log2 ≤ ((ℓ x) + 1).log2 ∧ ((ℓ x) + 1).log2 ≤ (ℓ x).log2 + 1 by
+      simp only [abs.eq_1, max_def]
+      grind only
+    grind only [!log2_le_log2_succ, !log2_add_le_log2]
 
 /--
 Lemma 2.1.6 from the book
