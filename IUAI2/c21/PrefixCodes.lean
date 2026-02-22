@@ -5,7 +5,6 @@ import Mathlib
 import IUAI2.c21.BinStr
 import IUAI2.c21.Bijection
 
-
 -------------------------------------------------------------------------------
 -- List Powers
 -------------------------------------------------------------------------------
@@ -152,7 +151,9 @@ lemma prefix_incomparable_append (A B x y : 𝔹*)
 -- Prefix Freeness
 -------------------------------------------------------------------------------
 
--- A set P ⊆ B∗ is prefix-free if no element of the set is a proper prefix of another.
+/--
+A set P ⊆ B∗ is prefix-free if no element of the set is a proper prefix of another.
+-/
 @[simp]
 def prefix_free (P : Set 𝔹*) : Prop :=
   ∀ x ∈ P, ∀ y ∈ P, ¬(x ⊏ y)
@@ -161,7 +162,7 @@ def prefix_free (P : Set 𝔹*) : Prop :=
 A function c's range is prefix-free
 -/
 @[simp]
-def prefix_free' (c : 𝔹* -> 𝔹*) : Prop :=
+def range_prefix_free (c : 𝔹* -> 𝔹*) : Prop :=
   prefix_free (Set.range c)
 
 -------------------------------------------------------------------------------
@@ -173,7 +174,7 @@ A prefix code is an injective function from 𝔹* to 𝔹* whose range is prefix
 -/
 class PrefixCode (c : 𝔹* → 𝔹*) : Prop where
   injective : Function.Injective c
-  prefix_free : prefix_free' c
+  prefix_free : range_prefix_free c
 
 /--
 Kyle's Equivalent Characterization of Prefix Codes:
@@ -188,7 +189,7 @@ PrefixCode c ↔ ∀ x y : 𝔹*, x ≠ y → c x ⋢ c y := by
     by_cases h : z = []
     · case pos => subst h; grind only
     · case neg =>
-      simp only [prefix_free', prefix_free, Set.mem_range,
+      simp only [range_prefix_free, prefix_free, Set.mem_range,
         BinStr.proper_prefix, ne_eq, not_exists, not_and, Decidable.not_not,
         forall_exists_index, forall_apply_eq_imp_iff] at pf
       grind only
@@ -202,7 +203,7 @@ PrefixCode c ↔ ∀ x y : 𝔹*, x ≠ y → c x ⋢ c y := by
       have h2 : c x ⊑ c y := ⟨[], by grind only⟩
       contradiction
     · case prefix_free =>
-      simp only [prefix_free', prefix_free, Set.mem_range, BinStr.proper_prefix,
+      simp only [range_prefix_free, prefix_free, Set.mem_range, BinStr.proper_prefix,
         forall_exists_index]
       rintro cx x hx cy y hy ⟨z, hz1, hz2⟩
       by_cases hxy : x = y
@@ -229,7 +230,7 @@ def E : Nat -> 𝔹* -> 𝔹*
 | 0, x => [true] ^ ⌜x⌝⁻¹ ++ [false]
 | i + 1, x => E i ⌜ℓ x⌝ ++ x
 
-lemma E_zero_len (x : 𝔹*) : (E 0 x).length = ⌜x⌝⁻¹ + 1 := by
+lemma E_zero_len (x : 𝔹*) : ℓ (E 0 x) = ⌜x⌝⁻¹ + 1 := by
   simp_all only [E, BinStr.to_nat, List.length_append,
     list_pow_eq_replicate, List.length_replicate, List.length_cons,
     List.length_nil, zero_add]
@@ -242,8 +243,8 @@ lemma E_0_injective : Function.Injective (E 0) := by
   apply b0_to_nat_bijective.left
 
 -- The range of E_0 is prefix-free
-lemma E_0_prefix_free : prefix_free' (E 0) := by
-  simp only [prefix_free', prefix_free, E, Set.range, Set.mem_setOf_eq,
+lemma E_0_prefix_free : range_prefix_free (E 0) := by
+  simp only [range_prefix_free, prefix_free, E, Set.range, Set.mem_setOf_eq,
     BinStr.proper_prefix, ne_eq, not_exists, not_and, Decidable.not_not,
     forall_exists_index, forall_apply_eq_imp_iff, List.append_assoc,
     List.cons_append, List.nil_append]
@@ -274,7 +275,6 @@ PrefixCode (E (i + 1)) := by
   rw [PrefixCode_pairwise]
   intro x y hne
   have : x ≠ y := hne
-  show E (i + 1) x ⋢ E (i + 1) y
   have s1 : E (i + 1) x = E i ⌜ℓ x⌝ ++ x := E.eq_def (i + 1) x
   have s2 : E (i + 1) y = E i ⌜ℓ y⌝ ++ y := E.eq_def (i + 1) y
   by_cases h_len : ℓ x = ℓ y
