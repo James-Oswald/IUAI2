@@ -5,7 +5,7 @@ import Mathlib
 import IUAI2.c21.BinStr
 import IUAI2.c21.Bijection
 import IUAI2.c21.LogLemmas
-import IUAI2.c21.Asymptotics
+import IUAI2.c27.Asymptotics
 
 -------------------------------------------------------------------------------
 -- List Powers
@@ -221,6 +221,32 @@ PrefixCode c ↔ ∀ x y : 𝔹*, x ≠ y → c x ⋢ c y := by
         contradiction
 
 -------------------------------------------------------------------------------
+-- Unique Decodability
+-------------------------------------------------------------------------------
+
+/--
+A function code function is uniquely decodable if
+we can uniquely recover the input from the output,
+I.E. it makes appending unambiguous / injective.
+-/
+@[simp]
+def UniquelyDecodable (c : 𝔹* -> 𝔹*) : Prop :=
+  ∀ x1 y1 x2 y2 : 𝔹*, c x1 ++ y1 = c x2 ++ y2 → x1 = x2 ∧ y1 = y2
+
+lemma uniquely_decodable_iff_injective_prepend {c : 𝔹* → 𝔹*} :
+UniquelyDecodable c ↔ Function.Injective (λ p : 𝔹* × 𝔹* => c p.1 ++ p.2) := by
+  constructor
+  · case mp =>
+    simp only [Function.Injective, UniquelyDecodable]
+    grind only
+  · case mpr =>
+    simp only [Function.Injective, UniquelyDecodable]
+    intro h x1 y1 x2 y2 h_eq
+    have := @h (x1, y1) (x2, y2) h_eq
+    simp only [Prod.mk.injEq] at this
+    exact this
+
+-------------------------------------------------------------------------------
 -- Hutter's Infinite Family of Prefix Codes, E_i
 -------------------------------------------------------------------------------
 
@@ -346,9 +372,11 @@ theorem PrefixCode_E_i (i : Nat) : PrefixCode (E i) := by
   | succ i' ih => exact PrefixCode_E_succ i' ih
 
 -- Theorem 2.1.7 from the book
+-- TODO: Use UniquelyDcodable predicate
 theorem prepend_prefix_code_injective
-{c : 𝔹* → 𝔹*} (h : PrefixCode c) (x1 y1 x2 y2 : 𝔹*) :
-c x1 ++ y1 = c x2 ++ y2 → x1 = x2 ∧ y1 = y2 := by
+{c : 𝔹* → 𝔹*} (h : PrefixCode c) : UniquelyDecodable c := by
+  simp only [UniquelyDecodable]
+  intro x1 y1 x2 y2
   have hp : ∀ (x y : 𝔹*), x ≠ y → ¬c x ⊑ c y := by rw [PrefixCode_pairwise] at h; exact h
   show c x1 ++ y1 = c x2 ++ y2 → x1 = x2 ∧ y1 = y2
   suffices x1 ≠ x2 ∨ y1 ≠ y2 → c x1 ++ y1 ≠ c x2 ++ y2 by grind only
